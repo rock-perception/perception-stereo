@@ -1,0 +1,22 @@
+<package>
+  <description brief="Library to create dense stereo images">
+  
+  </description>
+  <author>Jan Frädrich/jan.fraedrich@dfki.de</author>
+  <license></license>
+  <url>http://</url>
+  <logo>http://</logo>
+ <!--
+   To add any dependencies use the depend tag
+  <depend package="dummy-dependency-0" />
+	...
+  <depend package="dummy-dependency-n-1" />
+  <depend package="dummy-dependency-n" />
+-->
+<depend package="opencv" />
+<!--DEPEND-ENTRY-->
+  <versioncontrol type="git" url="" />
+  <export>
+    <cpp cflags="" lflags="" />
+  </export>
+</package>
