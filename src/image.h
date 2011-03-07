@@ -160,6 +160,20 @@ image<uchar> *loadPGM(const char *name) {
   return im;
 }
 
+image<uchar> *cvtCvMatToImage(const IplImage *Image) {
+  int imgWidth = Image->width;
+  int imgHeight = Image->height;
+  
+  // create image structure
+  image<uchar> *im = new image<uchar>(imgWidth, imgHeight, false);
+  
+  // copy to structure that libelas can use
+  unsigned char * img_data = (unsigned char *)Image->imageData;
+  memcpy((void*)im->data,(void*)img_data,imgWidth*imgHeight);
+  
+  return im;
+}
+
 image<uchar> *loadImage(const char *name, bool right_image) {
   // load images with opencv
   ImageProcessing *imgproc = new ImageProcessing();//for reading and rectifying the image
@@ -190,12 +204,7 @@ image<uchar> *loadImage(const char *name, bool right_image) {
       throw pnm_error();
     }
   
-  // create image structure
-  image<uchar> *im = new image<uchar>(imgWidth, imgHeight, false);
-  
-  // copy to structure that libelas can use
-  unsigned char * img_data = (unsigned char *)curImage->imageData;
-  memcpy((void*)im->data,(void*)img_data,imgWidth*imgHeight);
+  image<uchar> *im = cvtCvMatToImage(curImage);
 
   delete imgproc;
   delete cp;
