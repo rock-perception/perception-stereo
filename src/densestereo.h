@@ -20,7 +20,7 @@ public:
    * @param left_output_frame left output frame
    * @param right_output_frame right output frame
    */  
-  void process_FramePair (const cv::Mat* left_frame,const cv::Mat* right_frame,
+  void process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
 				       cv::Mat* left_output_frame,cv::Mat* right_output_frame);
   /** compute disparities of image input pair file_1, file_2 
    * @param file_1 filename of left input image

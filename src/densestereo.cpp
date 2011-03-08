@@ -58,13 +58,13 @@ void DenseStereo::rectify(IplImage *image, bool right_image){
 }
 
 // compute disparities of image input pair left_frame, right_frame
-void DenseStereo::process_FramePair (const cv::Mat* left_frame,const cv::Mat* right_frame,
+void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
 				     cv::Mat* left_output_frame,cv::Mat* right_output_frame) {
 
   // rectify and convert images
   image<uchar> *I1,*I2;
-  IplImage left = *left_frame;
-  IplImage right = *right_frame;
+  IplImage left = left_frame;
+  IplImage right = right_frame;
   rectify(&left,0);
   rectify(&right,1);
   I1 = cvtCvMatToImage(&left);
