@@ -21,12 +21,19 @@ public:
    * @param right_output_frame right output frame
    */  
   void process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
-				       cv::Mat* left_output_frame,cv::Mat* right_output_frame);
+				       cv::Mat left_output_frame,cv::Mat right_output_frame);
   /** compute disparities of image input pair file_1, file_2 
    * @param file_1 filename of left input image
    * @param file_2 filename of right input image
    */
   void process_images (const char* file_1,const char* file_2);
+  
+  /** rotates the input image by angle
+   * @param img image to be rotated
+   * @param rotatedImg rotated image
+   * @param angle angle in radians
+   */
+  void rotateImage(const cv::Mat &img, cv::Mat &rotatedImg, const double angle);
   
 private:
   ///Instance of Elas
@@ -36,7 +43,7 @@ private:
    * @param image pointer to the image which should be rectified
    * @param right_image decides whether this image is handeld as right one or not
    */
-  void rectify(IplImage *image, bool right_image);
+  void rectify(IplImage *image, const bool right_image);
 };
 
 #endif

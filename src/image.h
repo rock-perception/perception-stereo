@@ -160,18 +160,48 @@ image<uchar> *loadPGM(const char *name) {
   return im;
 }
 
-image<uchar> *cvtCvMatToImage(const IplImage *Image) {
-  int imgWidth = Image->width;
-  int imgHeight = Image->height;
+// converts an image to grayscale and image<uchar>
+image<uchar> *cvtCvMatToGrayscaleImage(const cv::Mat &inImage) {
+  int imgWidth = inImage.size().width;
+  int imgHeight = inImage.size().height;
+  cv::Mat Image;
+  
+  // convert to grayscale image
+  switch(inImage.type()){
+    case CV_8UC1:
+      inImage.copyTo(Image);
+      break;
+    case CV_16UC1:
+      inImage.convertTo(Image, CV_8U, 1/256.);
+      break;
+    case CV_8UC3:
+      cvtColor( inImage, Image, CV_BGR2GRAY );
+      break;
+    case CV_16UC3:
+      inImage.convertTo(Image, CV_8U, 1/256.);
+      cvtColor( Image, Image, CV_BGR2GRAY );
+      break;
+    default:
+      std::cerr << "Unknown format. Cannot convert cv::Mat to image<uchar>." << std::endl;
+      throw pnm_error();
+  }
   
   // create image structure
   image<uchar> *im = new image<uchar>(imgWidth, imgHeight, false);
   
   // copy to structure that libelas can use
-  unsigned char * img_data = (unsigned char *)Image->imageData;
+  unsigned char * img_data = (unsigned char *)Image.data;
   memcpy((void*)im->data,(void*)img_data,imgWidth*imgHeight);
   
   return im;
+}
+
+cv::Mat convertImage2CvMat(image<uchar> *im) {
+  int width = im->width();
+  int height = im->height();
+  cv::Mat Image = cv::Mat(height, width, CV_8UC1, im->data);
+  cv::Mat deepCopyImage = Image.clone(); //deep copy to avoid problems with deletion of im
+  return deepCopyImage;
 }
 
 image<uchar> *loadImage(const char *name, bool right_image) {
@@ -204,7 +234,7 @@ image<uchar> *loadImage(const char *name, bool right_image) {
       throw pnm_error();
     }
   
-  image<uchar> *im = cvtCvMatToImage(curImage);
+  image<uchar> *im = cvtCvMatToGrayscaleImage(curImage);
 
   delete imgproc;
   delete cp;

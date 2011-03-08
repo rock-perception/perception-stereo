@@ -37,10 +37,10 @@ DenseStereo::~DenseStereo() {
 }
 
 // rectify images with opencv
-void DenseStereo::rectify(IplImage *image, bool right_image){
-  ImageProcessing *imgproc = new ImageProcessing();//for reading and rectifying the image
+void DenseStereo::rectify(IplImage *image, const bool right_image){
+  ImageProcessing *imgproc = new ImageProcessing();// for reading and rectifying the image
   
-  //load calibration parameters
+  // load calibration parameters
   CalibrationParameters *cp = new CalibrationParameters();
   cp->loadParameters();
   cp->calculateUndistortAndRectifyMaps();
@@ -59,16 +59,16 @@ void DenseStereo::rectify(IplImage *image, bool right_image){
 
 // compute disparities of image input pair left_frame, right_frame
 void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
-				     cv::Mat* left_output_frame,cv::Mat* right_output_frame) {
+				     cv::Mat left_output_frame,cv::Mat right_output_frame) {
 
-  // rectify and convert images
+  // rectify and convert images to Grayscale and to image<uchar>
   image<uchar> *I1,*I2;
   IplImage left = left_frame;
   IplImage right = right_frame;
   rectify(&left,0);
   rectify(&right,1);
-  I1 = cvtCvMatToImage(&left);
-  I2 = cvtCvMatToImage(&right);
+  I1 = cvtCvMatToGrayscaleImage(&left);
+  I2 = cvtCvMatToGrayscaleImage(&right);
   
   // check for correct size
   if (I1->width()<=0 || I1->height() <=0 || I2->width()<=0 || I2->height() <=0 ||
@@ -95,7 +95,7 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
   elas->process(I1->data,I2->data,D1_data,D2_data,dims);
 
   // find maximum disparity for scaling output disparity images to [0..255]
-  //TODO really needed, probably not
+  //TODO really needed?, probabely not
   float disp_max = 0;
   for (int32_t i=0; i<width*height; i++) {
     if (D1_data[i]>disp_max) disp_max = D1_data[i];
@@ -110,14 +110,16 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
     D2->data[i] = (uint8_t)max(255.0*D2_data[i]/disp_max,0.0);
   }
 
-  //TODO copy back to openCV
-  // convert back to openCV
-  /*convertImage2CvMat(D1,left_output_frame);
-  convertImage2CvMat(D2,right_output_frame);*/
+  // convert back to openCV cv::Mat
+  left_output_frame = convertImage2CvMat(D1);
+  right_output_frame = convertImage2CvMat(D2);
 
+  // save disparity image with openCV to test if conversion is ok
+  imwrite("opencv_disparity.png",left_output_frame);
+  
   // save disparity images
-  string output_l = "";
-  string output_r = "";
+  string output_l = "left";
+  string output_r = "right";
   output_l += "_disp.pgm";
   output_r += "_disp.pgm";
   savePGM(D1,output_l.c_str());
@@ -202,4 +204,16 @@ void DenseStereo::process_images (const char* file_1,const char* file_2) {
   delete D2;
   free(D1_data);
   free(D2_data);
+}
+
+void DenseStereo::rotateImage(const cv::Mat &img, cv::Mat &rotatedImg, const double angle){
+
+	double map[6];
+	CvMat map_matrix = cvMat(2, 3, CV_64FC1, map);
+
+	CvPoint2D32f pt = cvPoint2D32f(img.size().width / 2, img.size().height / 2);
+
+	cv2DRotationMatrix(pt, angle * 180. / CV_PI, 1.0, &map_matrix);
+
+	warpAffine(img, rotatedImg, &map_matrix, img.size() ,CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
 }
