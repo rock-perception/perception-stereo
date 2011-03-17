@@ -59,7 +59,7 @@ void DenseStereo::rectify(IplImage *image, const bool right_image){
 
 // compute disparities of image input pair left_frame, right_frame
 void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
-				     cv::Mat left_output_frame,cv::Mat right_output_frame) {
+				     cv::Mat &left_output_frame,cv::Mat &right_output_frame) {
 
   // rectify and convert images to Grayscale and to image<uchar>
   image<uchar> *I1,*I2;
@@ -115,15 +115,15 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
   right_output_frame = convertImage2CvMat(D2);
 
   // save disparity image with openCV to test if conversion is ok
-  imwrite("opencv_disparity.png",left_output_frame);
+  //imwrite("opencv_disparity.png",left_output_frame);
   
   // save disparity images
-  string output_l = "left";
+  /*string output_l = "left";
   string output_r = "right";
   output_l += "_disp.pgm";
   output_r += "_disp.pgm";
   savePGM(D1,output_l.c_str());
-  savePGM(D2,output_r.c_str());
+  savePGM(D2,output_r.c_str());*/
   
   // free memory
   delete I1;
@@ -206,14 +206,10 @@ void DenseStereo::process_images (const char* file_1,const char* file_2) {
   free(D2_data);
 }
 
-void DenseStereo::rotateImage(const cv::Mat &img, cv::Mat &rotatedImg, const double angle){
-
-	double map[6];
-	CvMat map_matrix = cvMat(2, 3, CV_64FC1, map);
-
-	CvPoint2D32f pt = cvPoint2D32f(img.size().width / 2, img.size().height / 2);
-
-	cv2DRotationMatrix(pt, angle * 180. / CV_PI, 1.0, &map_matrix);
-
-	warpAffine(img, rotatedImg, &map_matrix, img.size() ,CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
+cv::Mat DenseStereo::rotateImage(const cv::Mat& source, double angle){
+	cv::Point2f src_center(source.cols/2.0, source.rows/2.0);
+	cv::Mat rot_mat = cv::getRotationMatrix2D(src_center, angle, 1.0);
+	cv::Mat dst;
+	cv::warpAffine(source, dst, rot_mat, source.size());
+	return dst;
 }

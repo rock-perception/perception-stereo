@@ -21,7 +21,7 @@ public:
    * @param right_output_frame right output frame
    */  
   void process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
-				       cv::Mat left_output_frame,cv::Mat right_output_frame);
+			  cv::Mat &left_output_frame,cv::Mat &right_output_frame);
   /** compute disparities of image input pair file_1, file_2 
    * @param file_1 filename of left input image
    * @param file_2 filename of right input image
@@ -29,11 +29,12 @@ public:
   void process_images (const char* file_1,const char* file_2);
   
   /** rotates the input image by angle
-   * @param img image to be rotated
-   * @param rotatedImg rotated image
-   * @param angle angle in radians
+   * @param source image to be rotated
+   * @param angle angle in degrees
+   * @return by angle rotated image
    */
-  void rotateImage(const cv::Mat &img, cv::Mat &rotatedImg, const double angle);
+  cv::Mat rotateImage(const cv::Mat& source, double angle);
+  
   
 private:
   ///Instance of Elas

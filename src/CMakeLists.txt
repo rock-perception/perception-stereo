@@ -22,7 +22,7 @@ rock_library(dense_stereo
 	densestereo.h elas.h imageprocessing.h triangle.h
 	descriptor.h filter.h matrix.h)
 
-rock_executable(dense_stereo_bin main.cpp
-    DEPS dense_stereo
-    DEPS_PKGCONFIG opencv)
+#rock_executable(dense_stereo_bin main.cpp
+#    DEPS dense_stereo
+#    DEPS_PKGCONFIG opencv)
 
