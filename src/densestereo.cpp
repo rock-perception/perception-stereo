@@ -79,7 +79,7 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
     delete I1;
     delete I2;
     //TODO throw exception?
-    return;    
+    return;
   }
 
   // get image width and height

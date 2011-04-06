@@ -24,6 +24,8 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA
 #include <iostream>
 #include "densestereo.h"
 
+#include <opencv/cv.h>
+
 using namespace std;
 
 int main (int argc, char** argv) {
@@ -47,7 +49,7 @@ int main (int argc, char** argv) {
 
   // compute disparity for multiple input images (currently png)
   } else if (argc==4) {
-    string pathToImages = argv[1];
+    /*string pathToImages = argv[1];
     char str_imgNum[9];
 
     for(int dense_count = atoi(argv[2]); dense_count < atoi(argv[3]); dense_count++){
@@ -58,6 +60,33 @@ int main (int argc, char** argv) {
       right_tmp += str_imgNum;
       
       Dense_stereo.process_images(left_tmp.c_str(),right_tmp.c_str());
+      cout << "... done!" << endl;*/
+    string pathToImages = argv[1];
+    char str_imgNum[9];
+
+    for(int dense_count = atoi(argv[2]); dense_count < atoi(argv[3]); dense_count++){
+      sprintf(str_imgNum, "%04d.png", dense_count);
+      string left_tmp = pathToImages + "left_";
+      left_tmp += str_imgNum;
+      string right_tmp = pathToImages + "right_";
+      right_tmp += str_imgNum;
+      
+      //read images
+      cv::Mat left_frame, right_frame, left_output_frame, right_output_frame;
+      left_frame = cv::imread(left_tmp);
+      right_frame = cv::imread(right_tmp);
+      
+      Dense_stereo.process_FramePair(left_frame, right_frame, left_output_frame, right_output_frame);
+      
+      ostringstream file_count;
+      file_count << str_imgNum;
+
+      //write images
+      cv::imwrite(pathToImages + "right_frame_" + file_count.str() ,right_frame);
+      cv::imwrite(pathToImages + "left_frame_" + file_count.str() ,left_frame);
+      cv::imwrite(pathToImages + "right_frame_disp_" + file_count.str() ,right_output_frame);
+      cv::imwrite(pathToImages + "left_frame_disp_" + file_count.str() ,left_output_frame);
+      
       cout << "... done!" << endl;
     }
     
