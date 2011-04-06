@@ -11,7 +11,9 @@ include_directories("${OPENCV_INCLUDE_DIRS}")
 link_directories(${OPENCV_LIBRARY_DIRS})
 
 # use sse3 instruction set
-SET(CMAKE_CXX_FLAGS "-msse3")
+set(CMAKE_CXX_FLAGS "-msse3")
+
+set(CMAKE_BUILD_TYPE Release)
 
 rock_library(dense_stereo
     SOURCES calibrationparameters.cpp triangle.cpp
