@@ -39,7 +39,7 @@ void CalibrationParameters::loadParameters(){
         this->rx = 0.0; this->ry = 0.0; this->rz = 0.0;
 */
 	
-	/* asguard cam guppy */
+	/* asguard cam guppy nov 2010
 	//intrinsic parameters
 	//left camera
 	this->fx1 = 700.65830; this->fy1 = 702.43840;
@@ -55,7 +55,44 @@ void CalibrationParameters::loadParameters(){
 	this->tx = -251.29734; this->ty = -1.65053; this->tz = -8.26461;
 	//rotation
 	this->rx = -0.00284; this->ry = -0.01155; this->rz = 0.00804;
+*/
+	
+	/* asguard wide angle lens
+	//intrinsic parameters
+	//left camera
+	this->fx1 = 284.24382; this->fy1 = 285.20982;
+	this->cx1 = 323.63161; this->cy1 = 232.15181;
+	this->d01 = 0.00343; this->d11 = 0.00094; this->d21 = -0.00069; this->d31 = 0.00145;
+	//right camera
+	this->fx2 = 285.57255; this->fy2 = 286.28520;
+	this->cx2 = 318.59641; this->cy2 = 230.64484;
+	this->d02 = 0.00112; this->d12 = 0.00244; this->d22 = 0.00007; this->d32 = 0.00010;
 
+	//extrinsic parameters
+	//translation
+	this->tx = -251.92827; this->ty = -0.12599; this->tz = -8.36759;
+	//rotation
+	this->rx = -0.00462; this->ry = -0.01025; this->rz = 0.00650;
+	*/
+	
+	/* asguard cam guppy mar 2011 */
+	//intrinsic parameters
+	//left camera
+	this->fx1 = 701.60321; this->fy1 = 703.61811;
+	this->cx1 = 324.00043; this->cy1 = 256.81324;
+	this->d01 = -0.03207; this->d11 = 0.05658; this->d21 = -0.00060; this->d31 = 0.00207;
+	//right camera
+	this->fx2 = 701.48689; this->fy2 = 703.66743;
+	this->cx2 = 317.56601; this->cy2 = 235.52183;
+	this->d02 = -0.04774; this->d12 = 0.08554; this->d22 = -0.00080; this->d32 = -0.00071;
+
+	//extrinsic parameters
+	//translation
+	this->tx = -253.28725; this->ty = -0.51154; this->tz = -3.52484;
+	//rotation
+	this->rx = -0.00202; this->ry = -0.00352; this->rz = 0.00712;
+	
+	
 	cv::Mat tempRot;
 	tempRot.create(3, 1, CV_64F);
 	tempRot.at<double>(0,0) = this->rx;
