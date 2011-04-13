@@ -1,35 +1,36 @@
 /*
 Copyright 2011. All rights reserved.
-Institute of Measurement and Control Systems
-Karlsruhe Institute of Technology, Germany
-
-This file is part of libelas.
-Authors: Andreas Geiger, Jan F.
-
-libelas is free software; you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation; either version 3 of the License, or any later version.
-
-libelas is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-libelas; if not, write to the Free Software Foundation, Inc., 51 Franklin
-Street, Fifth Floor, Boston, MA 02110-1301, USA 
+Authors: Jan F.
 */
 
-// program showing how libelas can be used, try "./elas -h" for help
+// wrapper class to hide libelas from orocos
 
 #include "densestereo.h"
 
 using namespace std;
 
 DenseStereo::DenseStereo() {
+  //load default parameters to CalibrationParameters
+  CalibrationParameters calParam;
   // configure Elas and instantiate it
-  Elas::parameters param;
-  param.postprocess_only_left = false;
-  elas = new Elas(param);
+  Elas::parameters elasParam;
+  elasParam.postprocess_only_left = false;
+  Configuration::loadDefaultParameters(calParam, elasParam);
+  elas = new Elas(elasParam);
+
+  calParam.calculateUndistortAndRectifyMaps();
+}
+
+DenseStereo::DenseStereo(const std::string &conffile){
+  //instanciate CalibrationParameters
+  CalibrationParameters calParam;
+  //configure Elas and instantiate it
+  Elas::parameters elasParam;
+  elasParam.postprocess_only_left = false;
+  Configuration::loadConfigurationFromFile(conffile, calParam, elasParam);
+  elas = new Elas(elasParam);
+  
+  calParam.calculateUndistortAndRectifyMaps();
 }
 
 DenseStereo::~DenseStereo() {
@@ -40,13 +41,8 @@ DenseStereo::~DenseStereo() {
 void DenseStereo::rectify(IplImage *image, const bool right_image){
   ImageProcessing *imgproc = new ImageProcessing();// for reading and rectifying the image
   
-  // load calibration parameters
-  CalibrationParameters *cp = new CalibrationParameters();
-  cp->loadParameters();
-  cp->calculateUndistortAndRectifyMaps();
-
   // rectify image
-  int result = imgproc->preprocessImage(image, right_image, cp);
+  int result = imgproc->preprocessImage(image, right_image, &calParam);
   if(result != 0)
     {
       std::cerr << "Error preprocessing image." << std::endl;
@@ -54,7 +50,6 @@ void DenseStereo::rectify(IplImage *image, const bool right_image){
     }
     
   delete imgproc;
-  delete cp;
 }
 
 // compute disparities of image input pair left_frame, right_frame

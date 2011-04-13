@@ -22,19 +22,19 @@ public:
 
 	/** load precalculated parameters */
 	void loadParameters();
-	/// load parameters from file
-	void loadConfigurationFile(const string &filename);
+	/// load precalculated parameters from file
+	void loadCalibrationFromFile(cv::FileNode &calibration);
 	/// save parameters to file
-	void saveConfigurationFile(const string &filename);
+	void saveConfigurationFile(const std::string &filename);
 	/** calculates the undistortion parameters and the rectify maps */
 	void calculateUndistortAndRectifyMaps();
 
 	
 	/** getter functions */
 	//TODO check if they are used
-	double getTx(){return tx;};
+	/*double getTx(){return tx;};
 	cv::Mat getQ(){return Q;};
-	double getFX1(){return fx1;};
+	double getFX1(){return fx1;};*/
 
 	cv::Mat map11, map21, map12, map22;
 	int imgWidth, imgHeight;

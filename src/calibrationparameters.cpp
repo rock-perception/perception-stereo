@@ -136,12 +136,9 @@ void CalibrationParameters::loadParameters(){
 	this->T.at<double>(2,0) = this->tz;
 }
 
-void CalibrationParameters::loadConfigurationFile(const string &filename){
-    //open config file storage from filename
-    FileStorage fs(filename, FileStorage::READ);
-
+void CalibrationParameters::loadCalibrationFromFile(cv::FileNode &calibration){
     //load image width and height
-    FileNode imgSize = fs["image_size"];
+    cv::FileNode imgSize = calibration["image_size"];
     //default values
     imgWidth = 640; 
     imgHeight = 480;
@@ -149,20 +146,20 @@ void CalibrationParameters::loadConfigurationFile(const string &filename){
     imgHeight = (int)imgSize["image_height"];
 
     //intrinsic parameters
-    FileNode intrinsic = fs["intrinsic parameters"];
+    cv::FileNode intrinsic = calibration["intrinsic parameters"];
     //left camera
-    FileNode leftCam = intrinsic["left camera"];
+    cv::FileNode leftCam = intrinsic["left camera"];
     this->fx1 = (double)leftCam["fx"]; this->fy1 = (double)leftCam["fy"];
     this->cx1 = (double)leftCam["cx"]; this->cy1 = (double)leftCam["cy"];
     this->d01 = (double)leftCam["d0"]; this->d11 = (double)leftCam["d1"]; this->d21 = (double)leftCam["d2"]; this->d31 = (double)leftCam["d3"];
     //right camera
-    FileNode rightCam = intrinsic["right camera"];
+    cv::FileNode rightCam = intrinsic["right camera"];
     this->fx2 = (double)rightCam["fx"]; this->fy2 = (double)rightCam["fy"];
     this->cx2 = (double)rightCam["cx"]; this->cy2 = (double)rightCam["cy"];
     this->d02 = (double)rightCam["d0"]; this->d12 = (double)rightCam["d1"]; this->d22 = (double)rightCam["d2"]; this->d32 = (double)rightCam["d3"];
 
     //extrinsic parameters
-    FileNode extrinsic = fs["extrinsic parameters"];
+    cv::FileNode extrinsic = calibration["extrinsic parameters"];
     //translation
     this->tx = (double)extrinsic["tx"]; this->ty = (double)extrinsic["ty"]; this->tz = (double)extrinsic["tz"];
     //rotation
@@ -211,9 +208,9 @@ void CalibrationParameters::loadConfigurationFile(const string &filename){
     this->T.at<double>(2,0) = this->tz;
 }
 
-void CalibrationParameters::saveConfigurationFile(const string &filename){
+void CalibrationParameters::saveConfigurationFile(const std::string &filename){
     //open config file storage for writing configuration
-    FileStorage fs(filename, FileStorage::WRITE);
+    cv::FileStorage fs(filename, cv::FileStorage::WRITE);
     
     //save image width and height
     fs << "image_size" << "{";

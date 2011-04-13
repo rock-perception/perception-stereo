@@ -207,11 +207,12 @@ cv::Mat convertImage2CvMat(image<uchar> *im) {
 image<uchar> *loadImage(const char *name, bool right_image) {
   // load images with opencv
   ImageProcessing *imgproc = new ImageProcessing();//for reading and rectifying the image
-  
+
+  //load default calibration parameters
   CalibrationParameters *cp = new CalibrationParameters();
   cp->loadParameters();
   cp->calculateUndistortAndRectifyMaps();
-
+  
   int imgWidth = cp->imgWidth;
   int imgHeight = cp->imgHeight;
 

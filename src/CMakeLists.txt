@@ -16,11 +16,11 @@ set(CMAKE_CXX_FLAGS "-msse3")
 set(CMAKE_BUILD_TYPE Release)
 
 rock_library(dense_stereo
-    SOURCES calibrationparameters.cpp triangle.cpp
+    SOURCES calibrationparameters.cpp configuration.cpp triangle.cpp
 	densestereo.cpp elas.cpp descriptor.cpp
 	imageprocessing.cpp matrix.cpp
     DEPS_PKGCONFIG opencv
-    HEADERS calibrationparameters.h image.h timer.h
+    HEADERS calibrationparameters.h configuration.h image.h timer.h
 	densestereo.h elas.h imageprocessing.h triangle.h
 	descriptor.h filter.h matrix.h)
 

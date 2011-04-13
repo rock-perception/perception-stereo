@@ -1,18 +1,22 @@
 /* Author: Jan Frädrich */
 
-// Main header file. Include this to use dense_stereo in your code.
-
 #ifndef __DENSE_STEREO_H__
 #define __DENSE_STEREO_H__
 
 #include <iostream>
 #include "elas.h"
+#include "configuration.h"
 #include "image.h"
 
 class DenseStereo {
   
 public:
   DenseStereo();
+  /** load configuration for libelas and calibration data for the cams from file
+   * @param conffile filename to load configuration from
+   */
+  DenseStereo(const std::string &conffile);
+  
   virtual ~DenseStereo();
   /** compute disparities of input frame pair left_frame, right_frame 
    * @param left_frame left input frame
@@ -33,12 +37,14 @@ public:
    * @param angle angle in degrees
    * @return by angle rotated image
    */
-  cv::Mat rotateImage(const cv::Mat& source, double angle);
-  
+  cv::Mat rotateImage(const cv::Mat& source, double angle);  
   
 private:
-  ///Instance of Elas
+  ///Instance of libElas
   Elas *elas;
+  
+  ///calibration parameters
+  CalibrationParameters calParam;
   
   /** rectify \c image with openCV 
    * @param image pointer to the image which should be rectified
