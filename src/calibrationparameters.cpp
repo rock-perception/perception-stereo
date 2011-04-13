@@ -57,7 +57,7 @@ void CalibrationParameters::loadParameters(){
 	this->rx = -0.00284; this->ry = -0.01155; this->rz = 0.00804;
 */
 	
-	/* asguard wide angle lens
+	/* asguard wide angle lens 
 	//intrinsic parameters
 	//left camera
 	this->fx1 = 284.24382; this->fy1 = 285.20982;
@@ -91,7 +91,6 @@ void CalibrationParameters::loadParameters(){
 	this->tx = -253.28725; this->ty = -0.51154; this->tz = -3.52484;
 	//rotation
 	this->rx = -0.00202; this->ry = -0.00352; this->rz = 0.00712;
-	
 	
 	cv::Mat tempRot;
 	tempRot.create(3, 1, CV_64F);
@@ -135,6 +134,111 @@ void CalibrationParameters::loadParameters(){
 	this->T.at<double>(0,0) = this->tx;
 	this->T.at<double>(1,0) = this->ty;
 	this->T.at<double>(2,0) = this->tz;
+}
+
+void CalibrationParameters::loadConfigurationFile(const string &filename){
+    //open config file storage from filename
+    FileStorage fs(filename, FileStorage::READ);
+
+    //load image width and height
+    FileNode imgSize = fs["image_size"];
+    //default values
+    imgWidth = 640; 
+    imgHeight = 480;
+    imgWidth = (int)imgSize["image_width"];
+    imgHeight = (int)imgSize["image_height"];
+
+    //intrinsic parameters
+    FileNode intrinsic = fs["intrinsic parameters"];
+    //left camera
+    FileNode leftCam = intrinsic["left camera"];
+    this->fx1 = (double)leftCam["fx"]; this->fy1 = (double)leftCam["fy"];
+    this->cx1 = (double)leftCam["cx"]; this->cy1 = (double)leftCam["cy"];
+    this->d01 = (double)leftCam["d0"]; this->d11 = (double)leftCam["d1"]; this->d21 = (double)leftCam["d2"]; this->d31 = (double)leftCam["d3"];
+    //right camera
+    FileNode rightCam = intrinsic["right camera"];
+    this->fx2 = (double)rightCam["fx"]; this->fy2 = (double)rightCam["fy"];
+    this->cx2 = (double)rightCam["cx"]; this->cy2 = (double)rightCam["cy"];
+    this->d02 = (double)rightCam["d0"]; this->d12 = (double)rightCam["d1"]; this->d22 = (double)rightCam["d2"]; this->d32 = (double)rightCam["d3"];
+
+    //extrinsic parameters
+    FileNode extrinsic = fs["extrinsic parameters"];
+    //translation
+    this->tx = (double)extrinsic["tx"]; this->ty = (double)extrinsic["ty"]; this->tz = (double)extrinsic["tz"];
+    //rotation
+    this->rx = (double)extrinsic["rx"]; this->ry = (double)extrinsic["ry"]; this->rz = (double)extrinsic["rz"];
+
+    cv::Mat tempRot;
+    tempRot.create(3, 1, CV_64F);
+    tempRot.at<double>(0,0) = this->rx;
+    tempRot.at<double>(1,0) = this->ry;
+    tempRot.at<double>(2,0) = this->rz;
+    
+    //convert from rotation vector to rotation matrix
+    Rodrigues(tempRot, this->R);
+
+  //this->cameraMatrix1.create(3, 3, CV_64F);
+    this->cameraMatrix1 = 0.0; //set all entries to 0
+    this->cameraMatrix1.at<double>(2,2) = 1.0;
+    this->cameraMatrix1.at<double>(0,0) = this->fx1;
+    this->cameraMatrix1.at<double>(0,2) = this->cx1;
+    this->cameraMatrix1.at<double>(1,1) = this->fy1;
+    this->cameraMatrix1.at<double>(1,2) = this->cy1;
+
+  //this->cameraMatrix2.create(3, 3, CV_64F);
+    this->cameraMatrix2 = 0.0; //set all entries to zero
+    this->cameraMatrix2.at<double>(2,2) = 1.0;
+    this->cameraMatrix2.at<double>(0,0) = this->fx2;
+    this->cameraMatrix2.at<double>(0,2) = this->cx2;
+    this->cameraMatrix2.at<double>(1,1) = this->fy2;
+    this->cameraMatrix2.at<double>(1,2) = this->cy2;
+
+  //this->distCoeffs1.create(1, 4, CV_64F);
+    this->distCoeffs1.at<double>(0,0) = this->d01;
+    this->distCoeffs1.at<double>(0,1) = this->d11;
+    this->distCoeffs1.at<double>(0,2) = this->d21;
+    this->distCoeffs1.at<double>(0,3) = this->d31;
+
+  //this->distCoeffs2.create(1, 4, CV_64F);
+    this->distCoeffs2.at<double>(0,0) = this->d02;
+    this->distCoeffs2.at<double>(0,1) = this->d12;
+    this->distCoeffs2.at<double>(0,2) = this->d22;
+    this->distCoeffs2.at<double>(0,3) = this->d32;
+
+  //this->T.create(3, 1, CV_64F);
+    this->T.at<double>(0,0) = this->tx;
+    this->T.at<double>(1,0) = this->ty;
+    this->T.at<double>(2,0) = this->tz;
+}
+
+void CalibrationParameters::saveConfigurationFile(const string &filename){
+    //open config file storage for writing configuration
+    FileStorage fs(filename, FileStorage::WRITE);
+    
+    //save image width and height
+    fs << "image_size" << "{";
+    fs << "image_width" << imgWidth;
+    fs << "image_height" << imgHeight << "}";
+
+    //intrinsic parameters
+    fs << "intrinsic parameters" << "{";
+    //left camera
+    fs << "left camera" << "{";
+    fs << "fx" << this->fx1 << "fy" << this->fy1;
+    fs << "cx" << this->cx1 << "cy" << this->cy1;
+    fs << "d0" << this->d01 << "d1" << this->d11 << "d2" << this->d21 << "d3" << this->d31 << "}";
+    //right camera
+    fs << "right camera" << "{";
+    fs << "fx" << this->fx2 << "fy" << this->fy2;
+    fs << "cx" << this->cx2 << "cy" << this->cy2;
+    fs << "d0" << this->d02 << "d1" << this->d12 << "d2" << this->d22 << "d3" << this->d32 << "}" << "}";
+
+    //extrinsic parameters
+    fs << "extrinsic parameters" << "{";
+    //translation
+    fs << "tx" << this->tx << "ty" << this->ty << "tz" << this->tz;
+    //rotation
+    fs << "rx" << this->rx << "ry" << this->ry << "rz" << this->rz << "}";
 }
 
 void CalibrationParameters::calculateUndistortAndRectifyMaps(){

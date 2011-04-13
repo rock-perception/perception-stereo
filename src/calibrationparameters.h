@@ -22,6 +22,10 @@ public:
 
 	/** load precalculated parameters */
 	void loadParameters();
+	/// load parameters from file
+	void loadConfigurationFile(const string &filename);
+	/// save parameters to file
+	void saveConfigurationFile(const string &filename);
 	/** calculates the undistortion parameters and the rectify maps */
 	void calculateUndistortAndRectifyMaps();
 
