@@ -9,6 +9,7 @@
 
 void Configuration::loadDefaultParameters(CalibrationParameters &calParam, Elas::parameters &elasParam){
   calParam.loadParameters();
+  elasParam.postprocess_only_left = false;
 }
 
 void Configuration::loadConfigurationFromFile(const std::string &filename, CalibrationParameters &calParam, Elas::parameters &elasParam){

@@ -10,11 +10,8 @@ Authors: Jan F.
 using namespace std;
 
 DenseStereo::DenseStereo() {
-  //load default parameters to CalibrationParameters
-  CalibrationParameters calParam;
   // configure Elas and instantiate it
   Elas::parameters elasParam;
-  elasParam.postprocess_only_left = false;
   Configuration::loadDefaultParameters(calParam, elasParam);
   elas = new Elas(elasParam);
 
@@ -22,11 +19,8 @@ DenseStereo::DenseStereo() {
 }
 
 DenseStereo::DenseStereo(const std::string &conffile){
-  //instanciate CalibrationParameters
-  CalibrationParameters calParam;
   //configure Elas and instantiate it
   Elas::parameters elasParam;
-  elasParam.postprocess_only_left = false;
   Configuration::loadConfigurationFromFile(conffile, calParam, elasParam);
   elas = new Elas(elasParam);
   
