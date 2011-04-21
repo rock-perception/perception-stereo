@@ -238,6 +238,69 @@ void CalibrationParameters::saveConfigurationFile(const std::string &filename){
     fs << "rx" << this->rx << "ry" << this->ry << "rz" << this->rz << "}";
 }
 
+void CalibrationParameters::setStereoCalibrationParameters(const StereoCameraCalibration &stereoCamCal){
+  	//intrinsic parameters
+	//left camera
+	this->fx1 = stereoCamCal.CamLeft.fx; this->fy1 = stereoCamCal.CamLeft.fy;
+	this->cx1 = stereoCamCal.CamLeft.cx; this->cy1 = stereoCamCal.CamLeft.cy;
+	this->d01 = stereoCamCal.CamLeft.d0; this->d11 = stereoCamCal.CamLeft.d1;
+	this->d21 = stereoCamCal.CamLeft.d2; this->d31 = stereoCamCal.CamLeft.d3;
+	//right camera
+	this->fx2 = stereoCamCal.CamRight.fx; this->fy2 = stereoCamCal.CamRight.fy;
+	this->cx2 = stereoCamCal.CamRight.cx; this->cy2 = stereoCamCal.CamRight.cy;
+	this->d02 = stereoCamCal.CamRight.d0; this->d12 = stereoCamCal.CamRight.d1;
+	this->d22 = stereoCamCal.CamRight.d2; this->d32 = stereoCamCal.CamRight.d3;
+
+	//extrinsic parameters
+	//translation
+	this->tx = stereoCamCal.extrinsic.tx; this->ty = stereoCamCal.extrinsic.ty; this->tz = stereoCamCal.extrinsic.tz;
+	//rotation
+	this->rx = stereoCamCal.extrinsic.rx; this->ry = stereoCamCal.extrinsic.ry; this->rz = stereoCamCal.extrinsic.rz;
+	
+	cv::Mat tempRot;
+	tempRot.create(3, 1, CV_64F);
+	tempRot.at<double>(0,0) = this->rx;
+	tempRot.at<double>(1,0) = this->ry;
+	tempRot.at<double>(2,0) = this->rz;
+	
+	//convert from rotation vector to rotation matrix
+	Rodrigues(tempRot, this->R);
+	//this->R += cv::Mat::eye(this->R.rows, this->R.cols, CV_64F);
+
+//	this->cameraMatrix1.create(3, 3, CV_64F);
+	this->cameraMatrix1 = 0.0; //set all entries to 0
+	this->cameraMatrix1.at<double>(2,2) = 1.0;
+	this->cameraMatrix1.at<double>(0,0) = this->fx1;
+	this->cameraMatrix1.at<double>(0,2) = this->cx1;
+	this->cameraMatrix1.at<double>(1,1) = this->fy1;
+	this->cameraMatrix1.at<double>(1,2) = this->cy1;
+
+//	this->cameraMatrix2.create(3, 3, CV_64F);
+	this->cameraMatrix2 = 0.0; //set all entries to zero
+	this->cameraMatrix2.at<double>(2,2) = 1.0;
+	this->cameraMatrix2.at<double>(0,0) = this->fx2;
+	this->cameraMatrix2.at<double>(0,2) = this->cx2;
+	this->cameraMatrix2.at<double>(1,1) = this->fy2;
+	this->cameraMatrix2.at<double>(1,2) = this->cy2;
+
+//	this->distCoeffs1.create(1, 4, CV_64F);
+	this->distCoeffs1.at<double>(0,0) = this->d01;
+	this->distCoeffs1.at<double>(0,1) = this->d11;
+	this->distCoeffs1.at<double>(0,2) = this->d21;
+	this->distCoeffs1.at<double>(0,3) = this->d31;
+
+//	this->distCoeffs2.create(1, 4, CV_64F);
+	this->distCoeffs2.at<double>(0,0) = this->d02;
+	this->distCoeffs2.at<double>(0,1) = this->d12;
+	this->distCoeffs2.at<double>(0,2) = this->d22;
+	this->distCoeffs2.at<double>(0,3) = this->d32;
+
+//	this->T.create(3, 1, CV_64F);
+	this->T.at<double>(0,0) = this->tx;
+	this->T.at<double>(1,0) = this->ty;
+	this->T.at<double>(2,0) = this->tz;
+}
+
 void CalibrationParameters::calculateUndistortAndRectifyMaps(){
   cv::Mat R1, R2, P1, P2;
   cv::Size newSize = cv::Size(imgWidth, imgHeight);

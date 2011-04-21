@@ -27,3 +27,8 @@ void Configuration::saveConfigurationFile(const std::string &filename, Calibrati
   //TODO save to same format as load expects it
   calParam.saveConfigurationFile(filename);
 }
+
+void Configuration::loadConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam, CalibrationParameters &calParam, Elas::parameters &elasParam){
+  calParam.setStereoCalibrationParameters(stereoCamCal);
+  elasParam.postprocess_only_left = libElasParam.postprocess_only_left;
+}

@@ -9,11 +9,14 @@
 #define CALIBRATIONPARAMETERS_H_
 
 #include <opencv/cv.h>
+#include "Types.h"
 
 //TODO do correct error handling
 #define ERR_OK				0
 #define ERR_NO_VALID_IMAGE 		1
 #define ERR_UNSPEC 			2
+
+using namespace dense_stereo;
 
 class CalibrationParameters {
 public:
@@ -28,7 +31,10 @@ public:
 	void saveConfigurationFile(const std::string &filename);
 	/** calculates the undistortion parameters and the rectify maps */
 	void calculateUndistortAndRectifyMaps();
-
+	/** sets the calibration parameters from CameraCalibration structure
+	 * @param camCal camera calibration parameters for stereo camera setup
+	 */
+	void setStereoCalibrationParameters(const StereoCameraCalibration &stereoCamCal);
 	
 	/** getter functions */
 	//TODO check if they are used

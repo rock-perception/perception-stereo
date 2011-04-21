@@ -11,6 +11,9 @@
 #include <opencv/cv.h>
 #include "calibrationparameters.h"
 #include "elas.h"
+#include "Types.h"
+
+using namespace dense_stereo;
 
 class Configuration {
 public:
@@ -23,6 +26,9 @@ public:
 	static void loadConfigurationFromFile(const std::string &filename, CalibrationParameters &calParam, Elas::parameters &elasParam);
 	/// save parameters to file
 	static void saveConfigurationFile(const std::string &filename, CalibrationParameters &calParam, Elas::parameters &elasParam);
+	
+	/// load calibration parameters and libelas configuration
+	static void loadConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam, CalibrationParameters &calParam, Elas::parameters &elasParam);
 };
 
 #endif /* CONFIGURATION_H_ */

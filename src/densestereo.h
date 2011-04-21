@@ -7,6 +7,7 @@
 #include "elas.h"
 #include "configuration.h"
 #include "image.h"
+#include "Types.h"
 
 class DenseStereo {
   
@@ -18,6 +19,12 @@ public:
   DenseStereo(const std::string &conffile);
   
   virtual ~DenseStereo();
+  /** set calibration parameters for stereo camera setup and configure libElas
+   * @param stereoCamCal stereo camera calibration data
+   * @param libElasParam libElas configuration
+   */
+  void setCalibrationAndLibElasConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam);
+  
   /** compute disparities of input frame pair left_frame, right_frame 
    * @param left_frame left input frame
    * @param right_frame right input frame

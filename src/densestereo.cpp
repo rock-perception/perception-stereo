@@ -31,6 +31,18 @@ DenseStereo::~DenseStereo() {
   delete elas;
 }
 
+//set calibration and load libelas parameters (if other then default)
+void DenseStereo::setCalibrationAndLibElasConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam){
+  //delete default configured libelas
+  delete elas;
+  //configure Elas and instantiate it
+  Elas::parameters elasParam;
+  Configuration::loadConfiguration(stereoCamCal, libElasParam, calParam, elasParam);
+  elas = new Elas(elasParam);
+  
+  calParam.calculateUndistortAndRectifyMaps();
+}
+
 // rectify images with opencv
 void DenseStereo::rectify(IplImage *image, const bool right_image){
   ImageProcessing *imgproc = new ImageProcessing();// for reading and rectifying the image
