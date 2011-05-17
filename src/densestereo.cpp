@@ -95,25 +95,26 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
   //process
   elas->process(I1->data,I2->data,D1_data,D2_data,dims);
 
-  // find maximum disparity for scaling output disparity images to [0..255]
-  //TODO really needed?, probabely not
+  // find maximum disparity for scaling output disparity images to [0..1]
   /*float disp_max = 0;
   for (int32_t i=0; i<width*height; i++) {
     if (D1_data[i]>disp_max) disp_max = D1_data[i];
     if (D2_data[i]>disp_max) disp_max = D2_data[i];
   }
 
-  // copy float to uchar
-  image<uchar> *D1 = new image<uchar>(width,height);
-  image<uchar> *D2 = new image<uchar>(width,height);
+  //std::cout << "Disparity maximum:" << disp_max << std::endl;
+
+  // copy float to float between 0..1
+  /*image<float> *D1 = new image<float>(width,height);
+  image<float> *D2 = new image<float>(width,height);
   for (int32_t i=0; i<width*height; i++) {
-    D1->data[i] = (uint8_t)max(255.0*D1_data[i]/disp_max,0.0);
-    D2->data[i] = (uint8_t)max(255.0*D2_data[i]/disp_max,0.0);
-  }  
+    D1->data[i] = max(max(D1_data[i]/10.,0.0),1.);
+    D2->data[i] = max(max(D2_data[i]/10.,0.0),1.);
+  } */ 
 
   // convert back to openCV cv::Mat
-  left_output_frame = convertImage2CvMat(D1);
-  right_output_frame = convertImage2CvMat(D2);*/
+  //left_output_frame = convertImage2CvMat(D1);
+  //right_output_frame = convertImage2CvMat(D2);*/
 
   // convert data to cv::Mat
   cv::Mat temp = cv::Mat(height, width, CV_32FC1, D1_data);
@@ -122,7 +123,7 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
   right_output_frame = temp.clone(); //deep copy to avoid problems with deletion of Dx_data
   
   // save disparity image with openCV to test if conversion is ok
-  imwrite("opencv_disparity.png",left_output_frame);
+  //imwrite("opencv_disparity.png",left_output_frame);
   
   // save disparity images
   /*string output_l = "left";
