@@ -7,7 +7,7 @@
 #include "elas.h"
 #include "configuration.h"
 #include "image.h"
-#include "Types.h"
+#include "dense_stereo_types.h"
 
 class DenseStereo {
   

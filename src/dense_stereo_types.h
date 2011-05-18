@@ -1,5 +1,5 @@
-#ifndef TYPES__H
-#define TYPES__H
+#ifndef DENSE_STEREO_TYPES__H
+#define DENSE_STEREO_TYPES__H
 
 namespace dense_stereo{
   struct CameraCalibration

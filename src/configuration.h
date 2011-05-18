@@ -11,7 +11,7 @@
 #include <opencv/cv.h>
 #include "calibrationparameters.h"
 #include "elas.h"
-#include "Types.h"
+#include "dense_stereo_types.h"
 
 using namespace dense_stereo;
 
