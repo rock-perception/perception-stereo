@@ -2,6 +2,7 @@
 #define DENSE_STEREO_TYPES__H
 
 #include <base/time.h>
+#include <vector>
 
 namespace dense_stereo{
 
@@ -32,6 +33,9 @@ namespace dense_stereo{
   struct disparity_image
   {
     std::vector<float> data;
+
+    int height;
+    int width;
 
     StereoCameraCalibration calibration;
 
