@@ -9,7 +9,7 @@
 #define CALIBRATIONPARAMETERS_H_
 
 #include <opencv/cv.h>
-#include "Types.h"
+#include "dense_stereo_types.h"
 
 //TODO do correct error handling
 #define ERR_OK				0

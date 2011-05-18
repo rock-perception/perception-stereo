@@ -21,7 +21,7 @@ rock_library(dense_stereo
 	imageprocessing.cpp matrix.cpp
     DEPS_PKGCONFIG opencv
     HEADERS calibrationparameters.h configuration.h image.h timer.h
-	densestereo.h elas.h imageprocessing.h triangle.h Types.h
+	densestereo.h elas.h imageprocessing.h triangle.h dense_stereo_types.h
 	descriptor.h filter.h matrix.h)
 
 #rock_executable(dense_stereo_bin main.cpp
