@@ -72,9 +72,12 @@ int main (int argc, char** argv) {
       right_tmp += str_imgNum;
       
       //read images
-      cv::Mat left_frame, right_frame, left_output_frame, right_output_frame;
+      cv::Mat left_frame, right_frame;
       left_frame = cv::imread(left_tmp);
       right_frame = cv::imread(right_tmp);
+
+      cv::Mat left_output_frame = cv::Mat(left_frame.size().height, left_frame.size().width, cv::DataType<float>::type)
+      , right_output_frame = cv::Mat(right_frame.size().height, right_frame.size().width, cv::DataType<float>::type);
       
       Dense_stereo.process_FramePair(left_frame, right_frame, left_output_frame, right_output_frame);
       
