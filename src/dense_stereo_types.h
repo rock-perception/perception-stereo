@@ -33,7 +33,7 @@ namespace dense_stereo {
   /** 
    * 2D array structure representing a distance image for a pinhole camera model.
    * 
-   * The grid pixels are scaled such that (x/scale_x)+center_x = p_x are the
+   * The grid pixels are scaled such that (x*scale_x)+center_x = p_x are the
    * projective plane coordinates given a grid index x. This of course applies
    * to y as well.
    *
