@@ -11,6 +11,9 @@ DistanceImageVisualization::DistanceImageVisualization()
     : m_env( new Environment() ),
     m_grid( NULL )
 {
+    // set up the ruby adapters
+    VizPluginRubyAdapter( DistanceImageVisualization, dense_stereo::distance_image, DistanceImage );
+
     // set the environment
     FrameNode *c_fm = new FrameNode();
     m_env->getRootNode()->addChild( c_fm );
@@ -66,4 +69,6 @@ void DistanceImageVisualization::updateDataIntern(dense_stereo::distance_image c
 
     m_diop->updateAll();
 }
+
+VizkitQtPlugin( DistanceImageVisualization );
 
