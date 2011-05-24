@@ -6,6 +6,12 @@
 
 namespace dense_stereo {
 
+  /**
+   * Calibration parameters expressing the camera matrix and the coefficients
+   * for the lens distortion. See: 
+   * http://opencv.willowgarage.com/documentation/camera_calibration_and_3d_reconstruction.html
+   * for a description of the values and the model that is used.
+   */
   struct CameraCalibration
   {
     double fx, fy, cx, cy, d0, d1, d2, d3;
@@ -49,7 +55,7 @@ namespace dense_stereo {
     /// original timestamp of the camera image
     base::Time time;
 
-    /// distance values stored in row major order
+    /// distance values stored in row major order. NaN is used as the no value type.
     std::vector<scalar> data;
 
     /// height (y) value in pixels
