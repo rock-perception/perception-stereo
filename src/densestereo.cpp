@@ -95,57 +95,12 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
   if(!right_output_frame.data)
     right_output_frame = cv::Mat(right_frame.size().height, right_frame.size().width, cv::DataType<float>::type);
   
-  //float* D1_data = (float*)malloc(width*height*sizeof(float));
-  //float* D2_data = (float*)malloc(width*height*sizeof(float));
-
   //process
   elas->process(I1->data,I2->data,left_output_frame.ptr<float>(),right_output_frame.ptr<float>(),dims);
 
-  // find maximum disparity for scaling output disparity images to [0..1]
-  /*float disp_max = 0;
-  for (int32_t i=0; i<width*height; i++) {
-    if (left_output_frame.ptr<float>()[i]>disp_max) disp_max = *left_output_frame.ptr<float>(i);
-    //if (D2_data[i]>disp_max) disp_max = D2_data[i];
-  }*/
-
-  std::cout << "first left disparity value: " << *left_output_frame.ptr<float>() << std::endl;
-
-  // copy float to float between 0..1
-  /*image<float> *D1 = new image<float>(width,height);
-  image<float> *D2 = new image<float>(width,height);
-  for (int32_t i=0; i<width*height; i++) {
-    D1->data[i] = max(max(D1_data[i]/10.,0.0),1.);
-    D2->data[i] = max(max(D2_data[i]/10.,0.0),1.);
-  } */ 
-
-  // convert back to openCV cv::Mat
-  //left_output_frame = convertImage2CvMat(D1);
-  //right_output_frame = convertImage2CvMat(D2);
-
-  // convert data to cv::Mat
-  //cv::Mat temp = cv::Mat(height, width, CV_32FC1, D1_data);
-  //left_output_frame = temp.clone(); //deep copy to avoid problems with deletion of Dx_data
-  //temp = cv::Mat(height, width, CV_32FC1, D2_data);
-  //right_output_frame = temp.clone(); //deep copy to avoid problems with deletion of Dx_data
-  
-  // save disparity image with openCV to test if conversion is ok
-  //imwrite("opencv_disparity.png",left_output_frame);
-  
-  // save disparity images
-  /*string output_l = "left";
-  string output_r = "right";
-  output_l += "_disp.pgm";
-  output_r += "_disp.pgm";
-  savePGM(D1,output_l.c_str());
-  savePGM(D2,output_r.c_str());*/
-  
   // free memory
   delete I1;
   delete I2;
-  //delete D1;
-  //delete D2;
-  //free(D1_data);
-  //free(D2_data);
 }
 
 // compute disparities of image input pair file_1, file_2

@@ -463,9 +463,9 @@ bool Matrix::solve (const Matrix &M, FLOAT eps) {
     
     // check for singularity
     if (fabs(A.val[icol][icol]) < eps) {
-      free(indxc);
-      free(indxr);
-      free(ipiv);
+      delete[] indxc;
+      delete[] indxr;
+      delete[] ipiv;
       return false;
     }
     
@@ -494,9 +494,9 @@ bool Matrix::solve (const Matrix &M, FLOAT eps) {
   }
   
   // success
-  free(indxc);
-  free(indxr);
-  free(ipiv);
+  delete[] indxc;
+  delete[] indxr;
+  delete[] ipiv;
   return true;
 }
 
