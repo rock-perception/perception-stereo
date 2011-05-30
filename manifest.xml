@@ -7,6 +7,6 @@
 
     <depend package="opencv" />
     <depend package="base/types" />
+    <depend package="slam/envire" />
     <depend package="gui/vizkit" optional="1" />
-    <depend package="slam/envire" optional="1" />
 </package>

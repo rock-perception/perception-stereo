@@ -4,6 +4,8 @@
 #include <base/time.h>
 #include <vector>
 
+#include <envire/maps/Grids.hpp>
+
 namespace dense_stereo {
 
   /**
@@ -97,6 +99,39 @@ namespace dense_stereo {
     scalar center_x;
     /// center offset to apply to the y axis
     scalar center_y;
+
+    /** update an envire DistanceGrid from this distance image.  If the pointer
+     * to the grid is null, the grid is generated with the appropriate
+     * parameters.  
+     * @result true if a new grid was generated.
+     */
+    bool updateDistanceGrid( envire::DistanceGrid *&grid ) const
+    {
+	bool res = false;
+	if( !grid )
+	{
+	    // create new grid 
+	    grid = new envire::DistanceGrid( 
+		    width, height, 
+		    scale_x, scale_y, 
+		    center_x, center_y );
+	    res = true;
+	}
+
+	envire::DistanceGrid::ArrayType& distance = 
+	    grid->getGridData( envire::DistanceGrid::DISTANCE );
+
+	// copy the content not very performant but should do for now.
+	for( size_t x = 0; x<width; x++ )
+	{
+	    for( size_t y = 0; y<height; y++ )
+	    {
+		distance[y][x] = data[y*width+x];
+	    }
+	}
+
+	return res;
+    }
   };
 
 }
