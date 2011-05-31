@@ -17,7 +17,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 rock_library(dense_stereo
     SOURCES calibrationparameters.cpp configuration.cpp triangle.cpp
-	densestereo.cpp elas.cpp descriptor.cpp
+	densestereo.cpp elas.cpp descriptor.cpp filter.cpp
 	imageprocessing.cpp matrix.cpp
     DEPS_PKGCONFIG opencv
     HEADERS calibrationparameters.h configuration.h image.h timer.h
