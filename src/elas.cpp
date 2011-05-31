@@ -139,12 +139,56 @@ void Elas::process (uint8_t* I1_,uint8_t* I2_,float* D1,float* D2,const int32_t*
   _mm_free(I2);
 }
 
+void Elas::supportPointImage (uint8_t* I1_,uint8_t* I2_,const int32_t* dims,int16_t* &D_can,int32_t &D_can_width,int32_t &D_can_height,int32_t &D_can_stepsize){
+  
+  // get width, height and bytes per line
+  width  = dims[0];
+  height = dims[1];
+  bpl    = width + 15-(width-1)%16;
+  
+  // copy images to byte aligned memory
+  I1 = (uint8_t*)_mm_malloc(bpl*height*sizeof(uint8_t),16);
+  I2 = (uint8_t*)_mm_malloc(bpl*height*sizeof(uint8_t),16);
+  if (bpl==dims[2]) {
+    memcpy(I1,I1_,bpl*height*sizeof(uint8_t));
+    memcpy(I2,I2_,bpl*height*sizeof(uint8_t));
+  } else {
+    for (int32_t v=0; v<height; v++) {
+      memcpy(I1+v*bpl,I1_+v*dims[2],width*sizeof(uint8_t));
+      memcpy(I2+v*bpl,I2_+v*dims[2],width*sizeof(uint8_t));
+    }
+  }
+
+  // extract descriptors
+  Descriptor desc1(I1,width,height,bpl,param.subsampling);
+  Descriptor desc2(I2,width,height,bpl,param.subsampling);
+
+  // allocate space for Disparity candidate image
+  D_can_stepsize = param.candidate_stepsize;
+  D_can_width  = width/D_can_stepsize;
+  D_can_height = height/D_can_stepsize;
+  D_can = (int16_t*)calloc(D_can_width*D_can_height,sizeof(int16_t));
+  
+  // compute sparse disparity image
+  computeCandidateDisparityImage(desc1.I_desc,desc2.I_desc,D_can,D_can_width,D_can_height,D_can_stepsize);
+  
+  // remove inconsistent support points
+  removeInconsistentSupportPoints(D_can,D_can_width,D_can_height);
+  
+  // release memory
+  _mm_free(I1);
+  _mm_free(I2);
+}
+
 void Elas::removeInconsistentSupportPoints (int16_t* D_can,int32_t D_can_width,int32_t D_can_height) {
+  
+  int16_t* D_can_copy = (int16_t*)malloc(D_can_width*D_can_height*sizeof(int16_t));
+  memcpy(D_can_copy,D_can,D_can_width*D_can_height*sizeof(int16_t));
   
   // for all valid support points do
   for (int32_t u_can=0; u_can<D_can_width; u_can++) {
     for (int32_t v_can=0; v_can<D_can_height; v_can++) {
-      int16_t d_can = *(D_can+getAddressOffsetImage(u_can,v_can,D_can_width));
+      int16_t d_can = *(D_can_copy+getAddressOffsetImage(u_can,v_can,D_can_width));
       if (d_can>=0) {
         
         // compute number of other points supporting the current point
@@ -152,7 +196,7 @@ void Elas::removeInconsistentSupportPoints (int16_t* D_can,int32_t D_can_width,i
         for (int32_t u_can_2=u_can-param.incon_window_size; u_can_2<=u_can+param.incon_window_size; u_can_2++) {
           for (int32_t v_can_2=v_can-param.incon_window_size; v_can_2<=v_can+param.incon_window_size; v_can_2++) {
             if (u_can_2>=0 && v_can_2>=0 && u_can_2<D_can_width && v_can_2<D_can_height) {
-              int16_t d_can_2 = *(D_can+getAddressOffsetImage(u_can_2,v_can_2,D_can_width));
+              int16_t d_can_2 = *(D_can_copy+getAddressOffsetImage(u_can_2,v_can_2,D_can_width));
               if (d_can_2>=0 && abs(d_can-d_can_2)<=param.incon_threshold)
                 support++;
             }
@@ -165,6 +209,8 @@ void Elas::removeInconsistentSupportPoints (int16_t* D_can,int32_t D_can_width,i
       }
     }
   }
+  
+  free(D_can_copy);
 }
 
 void Elas::removeRedundantSupportPoints(int16_t* D_can,int32_t D_can_width,int32_t D_can_height,
@@ -359,20 +405,7 @@ inline int16_t Elas::computeMatchingDisparity (const int32_t &u,const int32_t &v
     return -1;
 }
 
-vector<Elas::support_pt> Elas::computeSupportMatches (uint8_t* I1_desc,uint8_t* I2_desc) {
-  
-  // be sure that at half resolution we only need data
-  // from every second line!
-  int32_t D_candidate_stepsize = param.candidate_stepsize;
-  if (param.subsampling)
-    D_candidate_stepsize += D_candidate_stepsize%2;
-
-  // create matrix for saving disparity candidates
-  int32_t D_can_width  = 0;
-  int32_t D_can_height = 0;
-  for (int32_t u=0; u<width;  u+=D_candidate_stepsize) D_can_width++;
-  for (int32_t v=0; v<height; v+=D_candidate_stepsize) D_can_height++;
-  int16_t* D_can = (int16_t*)calloc(D_can_width*D_can_height,sizeof(int16_t));
+void Elas::computeCandidateDisparityImage(uint8_t* I1_desc,uint8_t* I2_desc,int16_t* D_can,int32_t D_can_width,int32_t D_can_height,int32_t D_can_stepsize) {
 
   // loop variables
   int32_t u,v;
@@ -380,9 +413,9 @@ vector<Elas::support_pt> Elas::computeSupportMatches (uint8_t* I1_desc,uint8_t* 
    
   // for all point candidates in image 1 do
   for (int32_t u_can=1; u_can<D_can_width; u_can++) {
-    u = u_can*D_candidate_stepsize;
+    u = u_can*D_can_stepsize;
     for (int32_t v_can=1; v_can<D_can_height; v_can++) {
-      v = v_can*D_candidate_stepsize;
+      v = v_can*D_can_stepsize;
       
       // initialize disparity candidate to invalid
       *(D_can+getAddressOffsetImage(u_can,v_can,D_can_width)) = -1;
@@ -398,6 +431,23 @@ vector<Elas::support_pt> Elas::computeSupportMatches (uint8_t* I1_desc,uint8_t* 
       }
     }
   }
+}
+
+vector<Elas::support_pt> Elas::computeSupportMatches (uint8_t* I1_desc,uint8_t* I2_desc) {
+  
+  // be sure that at half resolution we only need data
+  // from every second line!
+  int32_t D_can_stepsize = param.candidate_stepsize;
+  if (param.subsampling)
+    D_can_stepsize += D_can_stepsize%2;
+  
+  // allocate space for Disparity candidate image
+  int32_t D_can_width  = width/D_can_stepsize;
+  int32_t D_can_height = height/D_can_stepsize;
+  int16_t* D_can = (int16_t*)calloc(D_can_width*D_can_height,sizeof(int16_t));
+  
+  // compute sparse disparity image
+  computeCandidateDisparityImage(I1_desc,I2_desc,D_can,D_can_width,D_can_height,D_can_stepsize);
   
   // remove inconsistent support points
   removeInconsistentSupportPoints(D_can,D_can_width,D_can_height);
@@ -413,8 +463,8 @@ vector<Elas::support_pt> Elas::computeSupportMatches (uint8_t* I1_desc,uint8_t* 
   for (int32_t u_can=1; u_can<D_can_width; u_can++)
     for (int32_t v_can=1; v_can<D_can_height; v_can++)
       if (*(D_can+getAddressOffsetImage(u_can,v_can,D_can_width))>=0)
-        p_support.push_back(support_pt(u_can*D_candidate_stepsize,
-                                       v_can*D_candidate_stepsize,
+        p_support.push_back(support_pt(u_can*D_can_stepsize,
+                                       v_can*D_can_stepsize,
                                        *(D_can+getAddressOffsetImage(u_can,v_can,D_can_width))));
   
   // if flag is set, add support points in image corners
@@ -430,6 +480,12 @@ vector<Elas::support_pt> Elas::computeSupportMatches (uint8_t* I1_desc,uint8_t* 
 }
 
 vector<Elas::triangle> Elas::computeDelaunayTriangulation (vector<support_pt> p_support,int32_t right_image) {
+  
+  // check if we have enough support points for triangulation
+  if (p_support.size()<3) {
+    vector<Elas::triangle> empty;
+    return empty;
+  }
 
   // input/output structure for triangulation
   struct triangulateio in, out;
@@ -587,10 +643,10 @@ void Elas::createGrid(vector<support_pt> p_support,int32_t* disparity_grid,int32
     for (int32_t d=d_min; d<=d_max; d++) {
       int32_t x;
       if (!right_image)
-        x = floor((float)(x_curr/param.grid_size));
+        x = x_curr/param.grid_size;
       else
-        x = floor((float)(x_curr-d_curr)/(float)param.grid_size);
-      int32_t y = floor((float)y_curr/(float)param.grid_size);
+        x = (x_curr-d_curr)/param.grid_size;
+      int32_t y = y_curr/param.grid_size;
       
       // point may potentially lay outside (corner points)
       if (x>=0 && x<grid_width &&y>=0 && y<grid_height) {
@@ -788,8 +844,9 @@ void Elas::computeDisparity(vector<support_pt> p_support,vector<triangle> tri,in
   // pre-compute prior 
   float two_sigma_squared = 2*param.sigma*param.sigma;
   int32_t* P = new int32_t[disp_num];
-  for (int32_t delta_d=0; delta_d<disp_num; delta_d++)
+  for (int32_t delta_d=0; delta_d<disp_num; delta_d++) {
     P[delta_d] = (int32_t)((-log(param.gamma+exp(-delta_d*delta_d/two_sigma_squared))+log(param.gamma))/param.beta);
+  }
   int32_t plane_radius = (int32_t)max((float)ceil(param.sigma*param.sradius),(float)2.0);
 
   // loop variables
@@ -859,31 +916,29 @@ void Elas::computeDisparity(vector<support_pt> p_support,vector<triangle> tri,in
     bool valid = fabs(plane_a)<0.7 && fabs(plane_d)<0.7;
         
     // first part (triangle corner A->B)
-    if ((int32_t)(A_u)!=(int32_t)(B_u)) {
-      for (int32_t u=max((int32_t)A_u,0); u<min((int32_t)B_u,width); u++){
-        if (!param.subsampling || u%2==0) {
-          int32_t v_1 = (uint32_t)(AC_a*(float)u+AC_b);
-          int32_t v_2 = (uint32_t)(AB_a*(float)u+AB_b);
-          for (int32_t v=min(v_1,v_2); v<max(v_1,v_2); v++)
-            if (!param.subsampling || v%2==0) {
-              findMatch(u,v,plane_a,plane_b,plane_c,disparity_grid,grid_dims,
-                        I1_desc,I2_desc,P,plane_radius,valid,right_image,D);
-            }
+    for (int32_t u=max((int32_t)A_u,0); u<min((int32_t)B_u,width); u++){
+      if (!param.subsampling || u%2==0) {
+        int32_t v_1 = (uint32_t)(AC_a*(float)u+AC_b);
+        int32_t v_2 = (uint32_t)(AB_a*(float)u+AB_b);
+        for (int32_t v=min(v_1,v_2); v<max(v_1,v_2); v++) {
+          if (!param.subsampling || v%2==0) {
+            findMatch(u,v,plane_a,plane_b,plane_c,disparity_grid,grid_dims,
+                      I1_desc,I2_desc,P,plane_radius,valid,right_image,D);
+          }
         }
       }
     }
 
     // second part (triangle corner B->C)
-    if ((int32_t)(B_u)!=(int32_t)(C_u)) {
-      for (int32_t u=max((int32_t)B_u,0); u<min((int32_t)C_u,width); u++){
-        if (!param.subsampling || u%2==0) {
-          int32_t v_1 = (uint32_t)(AC_a*(float)u+AC_b);
-          int32_t v_2 = (uint32_t)(BC_a*(float)u+BC_b);
-          for (int32_t v=min(v_1,v_2); v<max(v_1,v_2); v++)
-            if (!param.subsampling || v%2==0) {
-              findMatch(u,v,plane_a,plane_b,plane_c,disparity_grid,grid_dims,
-                        I1_desc,I2_desc,P,plane_radius,valid,right_image,D);
-            }
+    for (int32_t u=max((int32_t)B_u,0); u<min((int32_t)C_u,width); u++){
+      if (!param.subsampling || u%2==0) {
+        int32_t v_1 = (uint32_t)(AC_a*(float)u+AC_b);
+        int32_t v_2 = (uint32_t)(BC_a*(float)u+BC_b);
+        for (int32_t v=min(v_1,v_2); v<max(v_1,v_2); v++) {
+          if (!param.subsampling || v%2==0) {
+            findMatch(u,v,plane_a,plane_b,plane_c,disparity_grid,grid_dims,
+                      I1_desc,I2_desc,P,plane_radius,valid,right_image,D);
+          }
         }
       }
     }
