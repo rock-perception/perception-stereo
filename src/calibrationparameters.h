@@ -8,6 +8,7 @@
 #ifndef CALIBRATIONPARAMETERS_H_
 #define CALIBRATIONPARAMETERS_H_
 
+#include <stddef.h>
 #include <opencv/cv.h>
 #include "dense_stereo_types.h"
 

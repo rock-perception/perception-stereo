@@ -8,7 +8,6 @@
 #ifndef CONFIGURATION_H_
 #define CONFIGURATION_H_
 
-#include <opencv/cv.h>
 #include "calibrationparameters.h"
 #include "elas.h"
 #include "dense_stereo_types.h"
