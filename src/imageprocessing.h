@@ -24,7 +24,7 @@ public:
 	 * @param img image to preprocess (undistort/rectify)
 	 * @param right_image set to true if preprocessing right image
 	 * @param calibration calibration parameters of the cams*/
-	int preprocessImage(IplImage *left, bool right_image, CalibrationParameters *calibration);
+	int preprocessImage(cv::Mat &img, bool right_image, CalibrationParameters *calibration);
 private:
 	/** Rotates image \c src to \c angle radians */
 	void rotateImage(IplImage *src, IplImage *dst, double angle);

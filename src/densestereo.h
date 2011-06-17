@@ -6,7 +6,7 @@
 #include <iostream>
 #include "elas.h"
 #include "configuration.h"
-#include "image.h"
+#include "imageprocessing.h"
 #include "dense_stereo_types.h"
 
 namespace dense_stereo {
@@ -34,20 +34,7 @@ public:
    * @param right_output_frame right output frame (optionally)
    */  
   void process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
-			  cv::Mat &left_output_frame,cv::Mat &right_output_frame);// = cv::Mat()
-
-  /** compute disparities of image input pair file_1, file_2 
-   * @param file_1 filename of left input image
-   * @param file_2 filename of right input image
-   */
-  void process_images (const char* file_1,const char* file_2);
-  
-  /** rotates the input image by angle
-   * @param source image to be rotated
-   * @param angle angle in degrees
-   * @return by angle rotated image
-   */
-  cv::Mat rotateImage(const cv::Mat& source, double angle);
+			  cv::Mat &left_output_frame,cv::Mat &right_output_frame);
   
 private:
   ///Instance of libElas
@@ -60,7 +47,12 @@ private:
    * @param image pointer to the image which should be rectified
    * @param right_image decides whether this image is handeld as right one or not
    */
-  void rectify(IplImage *image, const bool right_image);
+  void rectify(cv::Mat &image, const bool right_image);
+  
+  /** convert colour of \c image to grayscale (uint8_t) with openCV
+   * @param image Image which is converted
+   */
+  void cvtCvMatToGrayscaleImage(cv::Mat &image);
 };
 
 }

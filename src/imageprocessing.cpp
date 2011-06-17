@@ -32,21 +32,20 @@ int ImageProcessing::acquireImage(IplImage *img, const char *name)
 	return result;
 }
 
-int ImageProcessing::preprocessImage(IplImage *img, bool right_image, CalibrationParameters *calibration){
+int ImageProcessing::preprocessImage(cv::Mat &img, bool right_image, CalibrationParameters *calibration){
 
 	int result = ERR_OK;
-	Mat newImage;
-	//IplImage *rotatedImage = cvCreateImage(cvSize(img->width, img->height), IPL_DEPTH_8U, 1);
+	cv::Mat newImage;
 
-	//this->rotateImage(img, rotatedImage, CV_PI);
 	if(!right_image)
 	{ // in case we process left image
-	remap(img, newImage, calibration->map11, calibration->map21, INTER_CUBIC);
+	  remap(img, newImage, calibration->map11, calibration->map21, INTER_CUBIC);
 	} else {// for the right image
-	remap(img, newImage, calibration->map12, calibration->map22, INTER_CUBIC);
+	  remap(img, newImage, calibration->map12, calibration->map22, INTER_CUBIC);
 	}
-	CvMat tMat = newImage;
-	cvCopy(&tMat, img);
+
+	//copy to output
+	img = newImage;
 	
 	return result;
 }
