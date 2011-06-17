@@ -118,4 +118,3 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
   elas->process(left.ptr<uint8_t>(),right.ptr<uint8_t>(),left_output_frame.ptr<float>(),right_output_frame.ptr<float>(),dims);
 }
 }
-
