@@ -13,18 +13,16 @@ link_directories(${OPENCV_LIBRARY_DIRS})
 # use sse3 instruction set
 set(CMAKE_CXX_FLAGS "-msse3")
 
-set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Release)
 
 rock_library(dense_stereo
-    SOURCES calibrationparameters.cpp configuration.cpp triangle.cpp
-	densestereo.cpp elas.cpp descriptor.cpp filter.cpp
-	imageprocessing.cpp matrix.cpp
-    DEPS_PKGCONFIG opencv envire
-    HEADERS calibrationparameters.h configuration.h image.h timer.h
-	densestereo.h elas.h imageprocessing.h triangle.h dense_stereo_types.h
-	descriptor.h filter.h matrix.h)
+    SOURCES calibrationparameters.cpp configuration.cpp densestereo.cpp
+	imageprocessing.cpp
+    DEPS_PKGCONFIG opencv libelas envire
+    HEADERS calibrationparameters.h configuration.h densestereo.h 
+	imageprocessing.h dense_stereo_types.h)
 
 #rock_executable(dense_stereo_bin main.cpp
 #    DEPS dense_stereo
-#    DEPS_PKGCONFIG opencv)
+#    DEPS_PKGCONFIG opencv libelas)
 

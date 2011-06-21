@@ -5,6 +5,7 @@
     <author>Jakob Schwendner/jakob.schwendner@dfki.de</author>
     <author>Christopher Gaudig/christopher.gaudig@dfki.de</author>
 
+    <depend package="image_processing/libelas" />
     <depend package="opencv" />
     <depend package="base/types" />
     <depend package="slam/envire" />
