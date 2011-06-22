@@ -4,7 +4,7 @@
 #define __DENSE_STEREO_H__
 
 #include <iostream>
-#include "elas.h"
+#include <libelas/elas.h>
 #include "configuration.h"
 #include "imageprocessing.h"
 #include "dense_stereo_types.h"

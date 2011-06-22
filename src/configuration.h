@@ -9,7 +9,7 @@
 #define CONFIGURATION_H_
 
 #include "calibrationparameters.h"
-#include "elas.h"
+#include <libelas/elas.h>
 #include "dense_stereo_types.h"
 
 namespace dense_stereo {
