@@ -13,7 +13,7 @@ link_directories(${OPENCV_LIBRARY_DIRS})
 # use sse3 instruction set
 set(CMAKE_CXX_FLAGS "-msse3")
 
-#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Release)
 
 rock_library(dense_stereo
     SOURCES calibrationparameters.cpp configuration.cpp densestereo.cpp
