@@ -12,7 +12,7 @@
 #include "elas.h"
 #include "dense_stereo_types.h"
 
-using namespace dense_stereo;
+namespace dense_stereo {
 
 class Configuration {
 public:
@@ -29,5 +29,6 @@ public:
 	/// load calibration parameters and libelas configuration
 	static void loadConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam, CalibrationParameters &calParam, Elas::parameters &elasParam);
 };
+}
 
 #endif /* CONFIGURATION_H_ */

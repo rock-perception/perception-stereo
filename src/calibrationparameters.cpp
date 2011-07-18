@@ -1,12 +1,7 @@
-/*
- * calibrationparameters.cpp
- *
- *  Created on: Jul 7, 2010 modified on Aug 18, 2010
- *      Author: dstoyanov, jfraedrich
- */
-
 #include "calibrationparameters.h"
 
+namespace dense_stereo {
+    
 CalibrationParameters::CalibrationParameters() {
 	this->cameraMatrix1.create(3,3, CV_64F);
 	this->cameraMatrix2.create(3,3, CV_64F);
@@ -321,4 +316,5 @@ void CalibrationParameters::calculateUndistortAndRectifyMaps(){
   initUndistortRectifyMap(this->cameraMatrix1, this->distCoeffs1, R1, P1, newSize, CV_32FC1, this->map11, this->map21);
 
   initUndistortRectifyMap(this->cameraMatrix2, this->distCoeffs2, R2, P2, newSize, CV_32FC1, this->map12, this->map22);
+}
 }

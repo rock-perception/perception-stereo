@@ -1,14 +1,9 @@
-/*
- * imageprocessing.cpp
- *
- *  Created on: Feb 16, 2011
- *      Author: jfraedrich
- */
-
 #include "imageprocessing.h"
 
 using namespace cv;
 
+namespace dense_stereo {
+    
 ImageProcessing::ImageProcessing() {
 	// TODO Auto-generated constructor stub
 }
@@ -66,4 +61,5 @@ void ImageProcessing::rotateImage(IplImage *src, IplImage *dst, double angle){
 	cv2DRotationMatrix(pt, angle * 180. / CV_PI, 1.0, &map_matrix);
 
 	cvWarpAffine(src, dst, &map_matrix, CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
+}
 }

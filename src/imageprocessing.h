@@ -1,10 +1,3 @@
-/*
- * imageprocessing.h
- *
- *  Created on: Feb 16, 2011
- *      Author: jfraedrich
- */
-
 #ifndef IMAGEPROCESSING_H_
 #define IMAGEPROCESSING_H_
 
@@ -12,6 +5,8 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include <iostream>
+
+namespace dense_stereo {
 
 class ImageProcessing {
 public:
@@ -35,4 +30,5 @@ private:
 	void rotateImage(IplImage *src, IplImage *dst, double angle);
 };
 
+}
 #endif /* IMAGEPROCESSING_H_ */

@@ -1,10 +1,3 @@
-/*
- * calibrationparameters.h
- *
- *  Created on: Jul 7, 2010
- *      Author: dstoyanov
- */
-
 #ifndef CALIBRATIONPARAMETERS_H_
 #define CALIBRATIONPARAMETERS_H_
 
@@ -12,13 +5,14 @@
 #include <opencv/cv.h>
 #include "dense_stereo_types.h"
 
+
+namespace dense_stereo {
+
 //TODO do correct error handling
 #define ERR_OK				0
 #define ERR_NO_VALID_IMAGE 		1
 #define ERR_UNSPEC 			2
-
-using namespace dense_stereo;
-
+    
 class CalibrationParameters {
 public:
 	CalibrationParameters();
@@ -58,5 +52,6 @@ private:
 	cv::Mat R, T, Q;
 
 };
+}
 
 #endif /* CALIBRATIONPARAMETERS_H_ */

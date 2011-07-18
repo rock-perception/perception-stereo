@@ -1,14 +1,10 @@
-/*
-Copyright 2011. All rights reserved.
-Authors: Jan F.
-*/
-
-// wrapper class to hide libelas from orocos
-
 #include "densestereo.h"
 
 using namespace std;
 
+namespace dense_stereo {
+
+// wrapper class to hide libelas from orocos
 DenseStereo::DenseStereo() {
   // configure Elas and instantiate it
   Elas::parameters elasParam;
@@ -181,4 +177,5 @@ cv::Mat DenseStereo::rotateImage(const cv::Mat& source, double angle){
 	cv::Mat dst;
 	cv::warpAffine(source, dst, rot_mat, source.size());
 	return dst;
+}
 }

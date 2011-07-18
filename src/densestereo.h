@@ -9,6 +9,8 @@
 #include "image.h"
 #include "dense_stereo_types.h"
 
+namespace dense_stereo {
+
 class DenseStereo {
   
 public:
@@ -60,5 +62,7 @@ private:
    */
   void rectify(IplImage *image, const bool right_image);
 };
+
+}
 
 #endif

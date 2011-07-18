@@ -1,11 +1,6 @@
-/*
- * configuration.cpp
- *
- *  Created on: Apr 13, 2011
- *      Author: jfraedrich
- */
-
 #include "configuration.h"
+
+namespace dense_stereo {
 
 void Configuration::loadDefaultParameters(CalibrationParameters &calParam, Elas::parameters &elasParam){
   calParam.loadParameters();
@@ -55,4 +50,5 @@ void Configuration::loadConfiguration(const StereoCameraCalibration &stereoCamCa
   elasParam.filter_adaptive_mean = libElasParam.filter_adaptive_mean;
   elasParam.postprocess_only_left = libElasParam.postprocess_only_left;
   elasParam.subsampling = libElasParam.subsampling;
+}
 }

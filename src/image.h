@@ -206,10 +206,10 @@ cv::Mat convertImage2CvMat(image<uchar> *im) {
 
 image<uchar> *loadImage(const char *name, bool right_image) {
   // load images with opencv
-  ImageProcessing *imgproc = new ImageProcessing();//for reading and rectifying the image
+  dense_stereo::ImageProcessing *imgproc = new dense_stereo::ImageProcessing();//for reading and rectifying the image
 
   //load default calibration parameters
-  CalibrationParameters *cp = new CalibrationParameters();
+  dense_stereo::CalibrationParameters *cp = new dense_stereo::CalibrationParameters();
   cp->loadParameters();
   cp->calculateUndistortAndRectifyMaps();
   
