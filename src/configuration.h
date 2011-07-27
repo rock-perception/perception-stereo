@@ -1,14 +1,6 @@
-/*
- * configuration.h
- *
- *  Created on: Apr 13, 2011
- *      Author: jfraedrich
- */
+#ifndef DENSE_STEREO_CONFIGURATION_H_
+#define DENSE_STEREO_CONFIGURATION_H_
 
-#ifndef CONFIGURATION_H_
-#define CONFIGURATION_H_
-
-#include "calibrationparameters.h"
 #include <libelas/elas.h>
 #include "dense_stereo_types.h"
 
@@ -20,15 +12,11 @@ public:
 	virtual ~Configuration();
 
 	/** load precalculated default parameters */
-	static void loadDefaultParameters(CalibrationParameters &calParam, Elas::parameters &elasParam);
-	/// load precalculated parameters from file
-	static void loadConfigurationFromFile(const std::string &filename, CalibrationParameters &calParam, Elas::parameters &elasParam);
-	/// save parameters to file
-	static void saveConfigurationFile(const std::string &filename, CalibrationParameters &calParam, Elas::parameters &elasParam);
+	static void loadLibElasDefaultParameters(Elas::parameters &elasParam);
 	
-	/// load calibration parameters and libelas configuration
-	static void loadConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam, CalibrationParameters &calParam, Elas::parameters &elasParam);
+	/// load libelas configuration
+	static void loadLibElasConfiguration(const libElasConfiguration &libElasParam, Elas::parameters &elasParam);
 };
 }
 
-#endif /* CONFIGURATION_H_ */
+#endif /* DENSE_STEREO_CONFIGURATION_H_ */

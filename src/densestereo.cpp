@@ -1,4 +1,6 @@
 #include "densestereo.h"
+#include "configuration.h"
+#include <stdexcept>
 
 using namespace std;
 
@@ -6,56 +8,49 @@ namespace dense_stereo {
 
 // wrapper class to hide libelas from orocos
 DenseStereo::DenseStereo() {
+  calibrationInitialized = false;
   // configure Elas and instantiate it
   Elas::parameters elasParam;
-  Configuration::loadDefaultParameters(calParam, elasParam);
+  Configuration::loadLibElasDefaultParameters(elasParam);
   elas = new Elas(elasParam);
-
-  calParam.calculateUndistortAndRectifyMaps();
-}
-
-DenseStereo::DenseStereo(const std::string &conffile){
-  //configure Elas and instantiate it
-  Elas::parameters elasParam;
-  Configuration::loadConfigurationFromFile(conffile, calParam, elasParam);
-  elas = new Elas(elasParam);
-  
-  calParam.calculateUndistortAndRectifyMaps();
 }
 
 DenseStereo::~DenseStereo() {
   delete elas;
 }
 
-//set calibration and load libelas parameters (if other then default)
-void DenseStereo::setCalibrationAndLibElasConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam){
+//set stereo calibration
+void DenseStereo::setStereoCalibration(const frame_helper::StereoCalibration& stereoCal, const int imgWidth, const int imgHeight){
+  calParam.setCalibration(stereoCal);
+  calParam.setImageSize(cv::Size(imgWidth, imgHeight));
+  calParam.initCv();
+  
+  calibrationInitialized = true;
+}
+
+//load libelas parameters (if other then default)
+void DenseStereo::setLibElasConfiguration(const libElasConfiguration &libElasParam){
   //delete default configured libelas
   delete elas;
   //configure Elas and instantiate it
   Elas::parameters elasParam;
-  Configuration::loadConfiguration(stereoCamCal, libElasParam, calParam, elasParam);
+  Configuration::loadLibElasConfiguration(libElasParam, elasParam);
   elas = new Elas(elasParam);
-  
-  calParam.calculateUndistortAndRectifyMaps();
 }
 
-// rectify images with opencv
-void DenseStereo::rectify(cv::Mat &image, const bool right_image){
-  ImageProcessing *imgproc = new ImageProcessing();// for rectification of the image
+// undistorts and rectifies images with opencv
+void DenseStereo::undistortAndRectify(cv::Mat &image, const frame_helper::CameraCalibrationCv& calib){
+  cv::Mat newImage;
   
-  // rectify image
-  int result = imgproc->preprocessImage(image, right_image, &calParam);
-  if(result != 0)
-    {
-      std::cerr << "Error preprocessing image." << std::endl;
-      //throw exception?
-    }
-    
-  delete imgproc;
+  // undistort/rectify image
+  cv::remap(image, newImage, calib.map1, calib.map2, cv::INTER_CUBIC);
+  
+  image = newImage;
 }
 
 // converts an image to grayscale (uint8_t)
 void DenseStereo::cvtCvMatToGrayscaleImage(cv::Mat &image) {
+  //TODO: Use FrameHelper to avoid double code
   cv::Mat newImage;
   // convert to grayscale image
   switch(image.type()){
@@ -78,25 +73,34 @@ void DenseStereo::cvtCvMatToGrayscaleImage(cv::Mat &image) {
   image = newImage;
 }
 
-// compute disparities of image input pair left_frame, right_frame
-void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &right_frame,
-				     cv::Mat &left_output_frame,cv::Mat &right_output_frame) {
-
+// computes disparities of image input pair left_frame, right_frame
+void DenseStereo::process_FramePair (const cv::Mat &left_frame,
+                                     const cv::Mat &right_frame,
+				     cv::Mat &left_output_frame,
+                                     cv::Mat &right_output_frame)
+{
+  if (!calibrationInitialized) {
+      throw std::runtime_error("Call setStereoCalibration() first!");
+  }
+  
   // rectify and convert images to Grayscale (uint8_t)
   cv::Mat left = left_frame;
   cv::Mat right = right_frame;
-  rectify(left,0);
-  rectify(right,1);
+  undistortAndRectify(left, calParam.camLeft);
+  undistortAndRectify(right, calParam.camRight);
   cvtCvMatToGrayscaleImage(left);
   cvtCvMatToGrayscaleImage(right);
   
   // check for correct size
-  if (left.size().width <=0 || left.size().height <=0 || right.size().width <=0 || right.size().height <=0 ||
-      left.size().width != right.size().width || left.size().height != right.size().height) {
-
+  if (left.size().width <=0 || left.size().height <=0 ||
+      right.size().width <=0 || right.size().height <=0 ||
+      left.size().width != right.size().width ||
+      left.size().height != right.size().height)
+  {
     cerr << "ERROR: Images must be of same size, but" << endl;
-    cerr << "       left: " << left.size().width <<  " x " << left.size().height << 
-                 ", right: " << right.size().width <<  " x " << right.size().height << endl;
+    cerr << "       left: " << left.size().width << " x " << left.size().height;
+    cerr << ", right: " << right.size().width << " x " << right.size().height;
+    cerr << endl;
 
     throw std::runtime_error("Images must be of same size.");
     return;
@@ -109,12 +113,22 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,const cv::Mat &ri
   // set processing dimensions
   const int32_t dims[3] = {width,height,width}; // bytes per line = width
   // allocate memory for disparity images if not already done
-  if(!left_output_frame.data)
-    left_output_frame = cv::Mat(left_frame.size().height, left_frame.size().width, cv::DataType<float>::type);
-  if(!right_output_frame.data)
-    right_output_frame = cv::Mat(right_frame.size().height, right_frame.size().width, cv::DataType<float>::type);
+  if (!left_output_frame.data) {
+    left_output_frame = cv::Mat(left_frame.size().height,
+                                left_frame.size().width,
+                                cv::DataType<float>::type);
+  }
+  if (!right_output_frame.data) {
+    right_output_frame = cv::Mat(right_frame.size().height,
+                                 right_frame.size().width,
+                                 cv::DataType<float>::type);
+ }
   
   // process
-  elas->process(left.ptr<uint8_t>(),right.ptr<uint8_t>(),left_output_frame.ptr<float>(),right_output_frame.ptr<float>(),dims);
+  elas->process(left.ptr<uint8_t>(),
+                right.ptr<uint8_t>(),
+                left_output_frame.ptr<float>(),
+                right_output_frame.ptr<float>(),
+                dims);
 }
 }

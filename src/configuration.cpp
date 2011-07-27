@@ -2,30 +2,11 @@
 
 namespace dense_stereo {
 
-void Configuration::loadDefaultParameters(CalibrationParameters &calParam, Elas::parameters &elasParam){
-  calParam.loadParameters();
+void Configuration::loadLibElasDefaultParameters(Elas::parameters &elasParam){
   elasParam.postprocess_only_left = false;
 }
 
-void Configuration::loadConfigurationFromFile(const std::string &filename, CalibrationParameters &calParam, Elas::parameters &elasParam){
-  //open config file storage from filename
-  cv::FileStorage fs(filename, cv::FileStorage::READ);
-  
-  cv::FileNode calibration = fs["calibration"];
-  calParam.loadCalibrationFromFile(calibration);
-}
-
-void Configuration::saveConfigurationFile(const std::string &filename, CalibrationParameters &calParam, Elas::parameters &elasParam){
-  //open config file storage from filename
-  //cv::FileStorage fs(filename, cv::FileStorage::READ);
-  
-  //TODO save to same format as load expects it
-  calParam.saveConfigurationFile(filename);
-}
-
-void Configuration::loadConfiguration(const StereoCameraCalibration &stereoCamCal, const libElasConfiguration &libElasParam, CalibrationParameters &calParam, Elas::parameters &elasParam){
-  calParam.setStereoCalibrationParameters(stereoCamCal);
-  
+void Configuration::loadLibElasConfiguration(const libElasConfiguration &libElasParam, Elas::parameters &elasParam){
   //TODO better copying between structs
   elasParam.disp_min = libElasParam.disp_min;
   elasParam.disp_max = libElasParam.disp_max;
