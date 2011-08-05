@@ -4,6 +4,7 @@
 #include <frame_helper/CalibrationCv.h>
 #include <base/time.h>
 #include <base/eigen.h>
+#include <cv.h>
 
 namespace stereo
 {

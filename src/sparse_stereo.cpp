@@ -1,5 +1,6 @@
 #include "sparse_stereo.hpp"
 #include <Eigen/Core>
+#include <iostream>
 
 using namespace stereo;
 using namespace std;
