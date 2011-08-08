@@ -8,31 +8,6 @@
 
 namespace dense_stereo {
 
-  /**
-   * Calibration parameters expressing the camera matrix and the coefficients
-   * for the lens distortion. See: 
-   * http://opencv.willowgarage.com/documentation/camera_calibration_and_3d_reconstruction.html
-   * for a description of the values and the model that is used.
-   */
-  struct CameraCalibration
-  {
-    double fx, fy, cx, cy, d0, d1, d2, d3;
-  };
-
-  struct ExtrinsicCalibration
-  {
-    double tx, ty, tz;
-    double rx, ry, rz;
-  };
-
-  struct StereoCameraCalibration
-  {
-    int imgWidth, imgHeight;
-    CameraCalibration CamLeft;
-    CameraCalibration CamRight;
-    ExtrinsicCalibration extrinsic;
-  };
-
   /** Configuration parameters for lib elas.*/
   struct libElasConfiguration
   {
