@@ -48,12 +48,15 @@ struct DetectorConfiguration
 struct FeatureConfiguration
 {
     FeatureConfiguration() 
-	: targetNumFeatures( 100 ),
+	: debugImage( true ),
+	  targetNumFeatures( 100 ),
 	  maxStereoYDeviation( 20 ),
 	  adaptiveDetectorParam( false ),
 	  detectorType( SURF ),
 	  filterType( NONE )
     {}
+
+    bool debugImage;
 
     int targetNumFeatures;
     int maxStereoYDeviation;
@@ -138,10 +141,13 @@ public:
     bool refineFeatureCorrespondences();
     void calculateDepthInformationBetweenCorrespondences();
 
+    const cv::Mat& getDebugImage() { return debugImage; };
+
 protected:
     void initDetector( size_t lastNumFeatures );
     void findFeatures( const cv::Mat &image, FeatureInfo& info );
-    void crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, std::vector<cv::DMatch>& filteredMatches12, int knn = 1 );
+    void crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, 
+	    std::vector<cv::DMatch>& filteredMatches12, int knn = 1 );
 
     frame_helper::StereoCalibrationCv calib;
     FeatureConfiguration config;
@@ -156,6 +162,9 @@ protected:
     cv::Ptr<cv::FeatureDetector> detector;
     cv::Ptr<cv::DescriptorExtractor> descriptorExtractor;
     cv::Ptr<cv::DescriptorMatcher> descriptorMatcher;
+
+    cv::Mat debugImage;
+    int debugRightOffset;
 };
 
 }

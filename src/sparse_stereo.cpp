@@ -133,6 +133,28 @@ void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &righ
 
 	initDetector( lastNumFeatures );
     }
+
+    if( config.debugImage )
+    {
+	debugRightOffset = leftImage.size().width;
+	cv::Size debugSize = 
+	    cv::Size(debugRightOffset + rightImage.size().width , leftImage.size().height);
+
+	debugImage.create( debugSize, CV_8UC3 );
+
+	// copy the source images into a single big image
+	cv::Mat leftRoi( debugImage, cv::Rect( 0, 0, leftImage.size().width, leftImage.size().height ) );
+	cv::cvtColor( 
+		leftImage,
+		leftRoi,
+		CV_GRAY2BGR );
+
+	cv::Mat rightRoi( debugImage, cv::Rect( debugRightOffset, 0, rightImage.size().width, rightImage.size().height ) );  
+	cv::cvtColor( 
+		rightImage,
+		rightRoi,
+		CV_GRAY2BGR );
+    }
 }
 
 void StereoFeatures::crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, cv::vector<cv::DMatch>& filteredMatches12, int knn )
@@ -323,6 +345,21 @@ bool StereoFeatures::refineFeatureCorrespondences()
             rightPutativeMatches.descriptors.row(i).copyTo(curRow);
             counter++;
         }
+    }
+
+    if( config.debugImage )
+    {
+	// draw left inter-frame correspondences
+	cv::Scalar color = cv::Scalar(0, 255, 0);
+	int width = 1;
+	for(size_t i = 0; i < leftMatches.keypoints.size() && i < rightMatches.keypoints.size(); i++ )
+	{
+	    cv::Point center1, center2;
+	    center1 = leftMatches.keypoints[i].pt;
+	    center2 = rightMatches.keypoints[i].pt;
+	    center2.x += debugRightOffset;
+	    cv::line( debugImage, center1, center2, color, width);
+	}
     }
 
     cout << "Number of refined stereo matches: " << counter << endl;
