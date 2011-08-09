@@ -120,9 +120,25 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info )
     info.descriptorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
 }
 
+void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat &right_image )
+{
+    findFeatures( left_image, right_image );
+    getPutativeStereoCorrespondences();
+    refineFeatureCorrespondences();
+    calculateDepthInformationBetweenCorrespondences();
+}
 
 void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &rightImage )
 {
+    // initialize the calibration structure
+    // if the image size has changed
+    cv::Size imageSize = leftImage.size();
+    if( calib.getImageSize() != imageSize )
+    {
+	calib.setImageSize( imageSize );
+	calib.initCv();
+    }
+
     findFeatures( leftImage, leftFeatures );
     findFeatures( rightImage, rightFeatures );
 

@@ -91,7 +91,7 @@ struct StereoFeatureArray
     typedef float Scalar;
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Eigen::DontAlign> Descriptor;
 
-    size_t descriptorSize;
+    int descriptorSize;
     std::vector<base::Vector3d> points;
     std::vector<KeyPoint> keypoints;
     std::vector<Scalar> descriptors;
@@ -136,12 +136,15 @@ public:
     void setCalibration( const frame_helper::StereoCalibration &calib );
     void setConfiguration( const FeatureConfiguration &config );
 
+    void processFramePair( const cv::Mat &left_image, const cv::Mat &right_image );
+
     void findFeatures( const cv::Mat &left_image, const cv::Mat &right_image );
     bool getPutativeStereoCorrespondences();
     bool refineFeatureCorrespondences();
     void calculateDepthInformationBetweenCorrespondences();
 
-    const cv::Mat& getDebugImage() { return debugImage; };
+    const cv::Mat& getDebugImage() { return debugImage; }
+    const StereoFeatureArray& getStereoFeatures() { return stereoFeatures; }
 
 protected:
     void initDetector( size_t lastNumFeatures );
