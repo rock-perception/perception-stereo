@@ -77,7 +77,8 @@ void DenseStereo::cvtCvMatToGrayscaleImage(cv::Mat &image) {
 void DenseStereo::process_FramePair (const cv::Mat &left_frame,
                                      const cv::Mat &right_frame,
 				     cv::Mat &left_output_frame,
-                                     cv::Mat &right_output_frame)
+                                     cv::Mat &right_output_frame,
+				     bool isRectified )
 {
   if (!calibrationInitialized) {
       throw std::runtime_error("Call setStereoCalibration() first!");
@@ -86,8 +87,11 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,
   // rectify and convert images to Grayscale (uint8_t)
   cv::Mat left = left_frame;
   cv::Mat right = right_frame;
-  undistortAndRectify(left, calParam.camLeft);
-  undistortAndRectify(right, calParam.camRight);
+  if( !isRectified )
+  {
+      undistortAndRectify(left, calParam.camLeft);
+      undistortAndRectify(right, calParam.camRight);
+  }
   cvtCvMatToGrayscaleImage(left);
   cvtCvMatToGrayscaleImage(right);
   
