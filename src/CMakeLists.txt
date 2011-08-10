@@ -13,8 +13,6 @@ link_directories(${OPENCV_LIBRARY_DIRS})
 # use sse3 instruction set
 set(CMAKE_CXX_FLAGS "-msse3")
 
-set(CMAKE_BUILD_TYPE Release)
-
 rock_library(dense_stereo
     SOURCES configuration.cpp densestereo.cpp sparse_stereo.cpp
     DEPS_PKGCONFIG opencv frame_helper libelas envire
