@@ -56,6 +56,7 @@ void DenseStereo::cvtCvMatToGrayscaleImage(cv::Mat &image) {
   switch(image.type()){
     case CV_8UC1:
       //do nothing as the image is already grayscale
+      newImage = image;
       break;
     case CV_16UC1:
       image.convertTo(newImage, CV_8U, 1/256.);
