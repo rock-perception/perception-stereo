@@ -50,10 +50,10 @@ struct FeatureConfiguration
     FeatureConfiguration() 
 	: debugImage( true ),
 	  targetNumFeatures( 100 ),
-	  maxStereoYDeviation( 20 ),
+	  maxStereoYDeviation( 5 ),
 	  adaptiveDetectorParam( false ),
 	  detectorType( SURF ),
-	  filterType( NONE )
+	  filterType( STEREO )
     {}
 
     bool debugImage;
