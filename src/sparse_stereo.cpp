@@ -325,11 +325,12 @@ bool StereoFeatures::refineFeatureCorrespondences()
                 }
             }
             break;
+        case NONE:
+	    runDefault = true;
+            break;
         default:
             cout << "RefineFeatureCorrespondences: (Warn) unrecognized filter method selected, no filtering applied!" << endl;
 	    runDefault = true;
-        case NONE:
-            break;
     }
 
     if( runDefault )
@@ -338,6 +339,8 @@ bool StereoFeatures::refineFeatureCorrespondences()
         numberOfGood = leftPutativeMatches.keypoints.size();
         matchesMask = vector<uchar>( leftPutativeMatches.keypoints.size(), 1 );
     }
+
+    assert( matchesMask.size() == leftPutativeMatches.keypoints.size() );
 
     // resize the descriptor matrices
     leftMatches.descriptors.create(numberOfGood, leftPutativeMatches.descriptors.cols, leftPutativeMatches.descriptors.type());
