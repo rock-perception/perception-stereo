@@ -378,10 +378,16 @@ bool StereoFeatures::refineFeatureCorrespondences()
 	    center2 = rightMatches.keypoints[i].pt;
 	    center2.x += debugRightOffset;
 	    cv::line( debugImage, center1, center2, color, width);
+
+	    int lradius = cvRound(leftMatches.keypoints[i].size*1.2/9.*2);
+	    cv::circle( debugImage, center1, lradius + 2, cvScalar(0, 0, 255), 1, 8, 0 );
+
+	    int rradius = cvRound(rightMatches.keypoints[i].size*1.2/9.*2);
+	    cv::circle( debugImage, center2, rradius + 2, cvScalar(0, 0, 255), 1, 8, 0 );
 	}
     }
 
-    cout << "Number of refined stereo matches: " << counter << endl;
+    //cout << "Number of refined stereo matches: " << counter << endl;
     return !runDefault;
 }
 
