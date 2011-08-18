@@ -12,13 +12,13 @@ BOOST_AUTO_TEST_CASE( viz_test )
     QtThreadedWidget<
 	vizkit::QVisualizationTestWidget<
 	    vizkit::DistanceImageVisualization, 
-	    dense_stereo::distance_image> > app;
+	    base::samples::DistanceImage> > app;
     app.start();
     std::cout << "Close the visualization window to abort this test." << std::endl;
 
     const size_t width = 640, height = 480;
 
-    dense_stereo::distance_image image;
+    base::samples::DistanceImage image;
     image.width = width;
     image.height = height;
     image.scale_x = 1.0/width;

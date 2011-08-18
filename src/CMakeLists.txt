@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS "-msse3")
 rock_library(dense_stereo
     SOURCES configuration.cpp densestereo.cpp sparse_stereo.cpp
     DEPS_PKGCONFIG opencv frame_helper libelas envire
-    HEADERS configuration.h densestereo.h dense_stereo_types.h sparse_stereo.hpp)
+    HEADERS configuration.h densestereo.h dense_stereo_types.h sparse_stereo.hpp sparse_stereo_types.h)
 
 #rock_executable(dense_stereo_bin main.cpp
 #    DEPS dense_stereo

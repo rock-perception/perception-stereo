@@ -3,7 +3,7 @@
 
 #include <vizkit/VizPlugin.hpp>
 #include <vizkit/EnvireVisualization.hpp>
-#include <dense_stereo/dense_stereo_types.h>
+#include <base/samples/distance_image.h>
 
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -19,7 +19,7 @@ namespace vizkit
 {
     class DistanceImageVisualization
         : public EnvireVisualization
-	, public VizPluginAddType<dense_stereo::distance_image>
+	, public VizPluginAddType<base::samples::DistanceImage>
         , boost::noncopyable
     {
     public:
@@ -27,7 +27,7 @@ namespace vizkit
         ~DistanceImageVisualization();
 
     protected:
-        virtual void updateDataIntern(dense_stereo::distance_image const& plan);
+        virtual void updateDataIntern(base::samples::DistanceImage const& plan);
 
     private:
 	boost::scoped_ptr<envire::Environment> m_env;

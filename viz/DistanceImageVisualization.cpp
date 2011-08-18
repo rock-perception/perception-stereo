@@ -12,7 +12,7 @@ DistanceImageVisualization::DistanceImageVisualization()
     m_grid( NULL )
 {
     // set up the ruby adapters
-    VizPluginRubyAdapter( DistanceImageVisualization, dense_stereo::distance_image, DistanceImage );
+    VizPluginRubyAdapter( DistanceImageVisualization, base::samples::DistanceImage, DistanceImage );
 
     // set the environment
     FrameNode *c_fm = new FrameNode();
@@ -37,15 +37,18 @@ DistanceImageVisualization::~DistanceImageVisualization()
 {
 }
 
-void DistanceImageVisualization::updateDataIntern(dense_stereo::distance_image const& value)
+void DistanceImageVisualization::updateDataIntern(base::samples::DistanceImage const& value)
 {
-    if( value.updateDistanceGrid( m_grid ) )
+    if( !m_grid )
     {
+	// create new grid with the size based on the distance image
+	m_grid = new envire::DistanceGrid( value );
+
 	// grid was created and needs to be attached
 	m_env->addInput( m_diop, m_grid );
 	m_env->setFrameNode( m_grid, m_pc->getFrameNode() );
     }
-
+    m_grid->copyFromDistanceImage( value );
     m_diop->updateAll();
 }
 

@@ -3,6 +3,7 @@
 
 #include <base/eigen.h>
 #include <vector>
+#include <base/time.h>
 
 namespace stereo
 {
@@ -77,6 +78,8 @@ struct KeyPoint
 
 struct StereoFeatureArray
 {
+    base::Time time;
+
     typedef float Scalar;
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Eigen::DontAlign> Descriptor;
 
