@@ -31,13 +31,13 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 
     switch(detectorType)
     {
-	case SURFGPU:
+	case DETECTOR_SURFGPU:
 	    {
 		// TODO subclass opencv detector interface for surfgpu
 		// return surfgpu(leftImage, rightImage, lastNumFeatures, targetNumFeatures);
 	    }
 	    break;
-	case SURF:
+	case DETECTOR_SURF:
 	    {
 		int &SURFparam = detectorParams.SURFparam;
 		// adaptively adjust the parameters for the SURF extractor in order to get around TARGET_NUM_FEATURES features
@@ -56,7 +56,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::SurfFeatureDetector( SURFparam, 4, 3 );
 	    }
 	    break;
-	case GOOD:
+	case DETECTOR_GOOD:
 	    {   
 		float &goodParam = detectorParams.goodParam;
 		double goodParamDiff = (double)localLastNumFeatures / (double)targetNumFeatures;
@@ -69,14 +69,14 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::GoodFeaturesToTrackDetector( targetNumFeatures + 20, goodParam, 15.0, 15, false, 0.04 );
 	    }
 	    break;
-	case SIFT:
+	case DETECTOR_SIFT:
 	    {
 		// double threshold, double edgeThreshold, int nOctaves=SIFT::CommonParams::DEFAULT_NOCTAVES, int nOctaveLayers=SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS, 
 		// int firstOctave=SIFT::CommonParams::DEFAULT_FIRST_OCTAVE, int angleMode=SIFT::CommonParams::FIRST_ANGLE
 		detector = new cv::SiftFeatureDetector();
 	    }
 	    break;
-	case MSER:
+	case DETECTOR_MSER:
 	    {
 		float &mserParam = detectorParams.mserParam;
 		mserParam += (localLastNumFeatures - targetNumFeatures) / 100.0;
@@ -84,7 +84,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::MserFeatureDetector(mserParam, 5, 500, 1.0, 0.5, 1, 1.0, 0.0, 1);
 	    }
 	    break;
-	case STAR:
+	case DETECTOR_STAR:
 	    {
 		float &starParam = detectorParams.starParam;
 		starParam += (localLastNumFeatures - targetNumFeatures) / 100.0;
@@ -92,7 +92,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::StarFeatureDetector(16, starParam, 6, 8, 5);
 	    }
 	    break;
-	case FAST:
+	case DETECTOR_FAST:
 	    {
 		float &fastParam = detectorParams.fastParam;
 		fastParam += (localLastNumFeatures - targetNumFeatures) / 100.0;

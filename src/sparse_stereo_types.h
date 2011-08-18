@@ -9,13 +9,18 @@ namespace stereo
 {
 enum DETECTOR
 {
-    SURF,
-    GOOD,
-    SURFGPU,
-    STAR,
-    MSER,
-    SIFT,
-    FAST
+    DETECTOR_SURF = 1,
+    DETECTOR_GOOD = 2,
+    DETECTOR_SURFGPU = 3,
+    DETECTOR_STAR = 4,
+    DETECTOR_MSER = 5,
+    DETECTOR_SIFT = 6,
+    DETECTOR_FAST = 7,
+};
+
+enum DESCRIPTOR
+{
+    DESCRIPTOR_SURF = 1,
 };
 
 enum FILTER
@@ -51,7 +56,7 @@ struct FeatureConfiguration
 	  targetNumFeatures( 100 ),
 	  maxStereoYDeviation( 5 ),
 	  adaptiveDetectorParam( false ),
-	  detectorType( SURF ),
+	  detectorType( DETECTOR_SURF ),
 	  filterType( STEREO )
     {}
 
@@ -84,6 +89,8 @@ struct StereoFeatureArray
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Eigen::DontAlign> Descriptor;
 
     int descriptorSize;
+    DESCRIPTOR descriptorType;
+
     std::vector<base::Vector3d> points;
     std::vector<KeyPoint> keypoints;
     std::vector<Scalar> descriptors;
