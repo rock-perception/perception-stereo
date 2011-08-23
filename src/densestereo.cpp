@@ -4,7 +4,7 @@
 
 using namespace std;
 
-namespace dense_stereo {
+namespace stereo {
 
 // wrapper class to hide libelas from orocos
 DenseStereo::DenseStereo() {

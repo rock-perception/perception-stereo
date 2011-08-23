@@ -1,5 +1,5 @@
-#ifndef dense_stereo_DistanceImageVisualization_H
-#define dense_stereo_DistanceImageVisualization_H
+#ifndef stereo_DistanceImageVisualization_H
+#define stereo_DistanceImageVisualization_H
 
 #include <vizkit/VizPlugin.hpp>
 #include <vizkit/EnvireVisualization.hpp>

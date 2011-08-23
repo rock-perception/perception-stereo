@@ -1,7 +1,7 @@
 #ifndef __VISUAL_ODOMETRY_STEREO_HPP__
 #define __VISUAL_ODOMETRY_STEREO_HPP__
 
-#include <dense_stereo/sparse_stereo_types.h>
+#include <stereo/sparse_stereo_types.h>
 #include <frame_helper/CalibrationCv.h>
 #include <base/time.h>
 #include <base/eigen.h>

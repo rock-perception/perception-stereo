@@ -1,5 +1,8 @@
 <package>
-    <description brief="Library to create dense stereo images">
+    <description brief="Library to process stereo images">
+	The stereo library contains functions to process stereo images using
+	both dense and sparse methods. The library also contains support
+	functions for pre-processing stereo images.
     </description>
     <author>Jan Frädrich/jan.fraedrich@dfki.de</author>
     <author>Jakob Schwendner/jakob.schwendner@dfki.de</author>

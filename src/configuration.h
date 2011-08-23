@@ -4,7 +4,7 @@
 #include <libelas/elas.h>
 #include "dense_stereo_types.h"
 
-namespace dense_stereo {
+namespace stereo {
 
 class Configuration {
 public:

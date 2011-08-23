@@ -1,6 +1,6 @@
 #include "configuration.h"
 
-namespace dense_stereo {
+namespace stereo {
 
 void Configuration::loadLibElasDefaultParameters(Elas::parameters &elasParam){
   elasParam.postprocess_only_left = false;

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace dense_stereo {
+namespace stereo {
 
   /** Configuration parameters for lib elas.*/
   struct libElasConfiguration

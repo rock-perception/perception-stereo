@@ -8,7 +8,7 @@
 #include <frame_helper/CalibrationCv.h>
 #include "dense_stereo_types.h"
 
-namespace dense_stereo {
+namespace stereo {
 
 class DenseStereo {
   
