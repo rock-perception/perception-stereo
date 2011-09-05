@@ -444,7 +444,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
 	// TODO for the time being take only left keypoints. However, it might
 	// be better to take the keypoint with the strongest response
 	// TODO normalize the size of the feature to the distance
-	KeyPoint kp;
+	envire::KeyPoint kp;
 	kp.size = leftMatches.keypoints[i].size;
 	kp.angle = leftMatches.keypoints[i].angle;
 	kp.response = leftMatches.keypoints[i].response;

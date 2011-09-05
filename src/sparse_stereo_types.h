@@ -4,6 +4,7 @@
 #include <base/eigen.h>
 #include <vector>
 #include <base/time.h>
+#include <envire/maps/Featurecloud.hpp>
 
 namespace stereo
 {
@@ -16,11 +17,6 @@ enum DETECTOR
     DETECTOR_MSER = 5,
     DETECTOR_SIFT = 6,
     DETECTOR_FAST = 7,
-};
-
-enum DESCRIPTOR
-{
-    DESCRIPTOR_SURF = 1,
 };
 
 enum FILTER
@@ -72,15 +68,6 @@ struct FeatureConfiguration
     FILTER filterType;
 };
 
-struct KeyPoint
-{
-    typedef float Scalar;
-
-    Scalar size;
-    Scalar angle;
-    Scalar response;
-};
-
 struct StereoFeatureArray
 {
     base::Time time;
@@ -89,15 +76,15 @@ struct StereoFeatureArray
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Eigen::DontAlign> Descriptor;
 
     int descriptorSize;
-    DESCRIPTOR descriptorType;
+    envire::DESCRIPTOR descriptorType;
 
     std::vector<base::Vector3d> points;
-    std::vector<KeyPoint> keypoints;
+    std::vector<envire::KeyPoint> keypoints;
     std::vector<Scalar> descriptors;
 
     StereoFeatureArray() : descriptorSize(0) {}
 
-    void push_back( const base::Vector3d& point, const KeyPoint& keypoint, const Descriptor& descriptor ) 
+    void push_back( const base::Vector3d& point, const envire::KeyPoint& keypoint, const Descriptor& descriptor ) 
     {
 	points.push_back( point );
 	keypoints.push_back( keypoint );
@@ -125,6 +112,16 @@ struct StereoFeatureArray
 	points.clear(); 
 	descriptors.clear(); 
 	keypoints.clear(); 
+    }
+
+    void copyTo( envire::Featurecloud& fc )
+    {
+	fc.clear();
+
+	std::copy( points.begin(), points.end(), std::back_inserter( fc.vertices ) );
+	std::copy( keypoints.begin(), keypoints.end(), std::back_inserter( fc.keypoints ) );
+	for( size_t i=0; i<size(); i++ )
+	    fc.descriptors.push_back( getDescriptor( i ) );
     }
 };
 }
