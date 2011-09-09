@@ -34,7 +34,7 @@ public:
     void calculateDepthInformationBetweenCorrespondences();
 
     const cv::Mat& getDebugImage() { return debugImage; }
-    const StereoFeatureArray& getStereoFeatures() { return stereoFeatures; }
+    StereoFeatureArray& getStereoFeatures() { return stereoFeatures; }
 
 protected:
     void initDetector( size_t lastNumFeatures );

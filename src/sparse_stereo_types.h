@@ -99,12 +99,20 @@ struct StereoFeatureArray
 	memcpy( &descriptors[0] + descriptors.size() - descriptorSize, descriptor.data(), descriptorSize ); 
     }
 
-    Eigen::Map<Descriptor> getDescriptor( size_t index ) 
+    Eigen::Map<Descriptor> getDescriptor( size_t index )
     { 
 	return Eigen::Map<Descriptor>( &descriptors[index*descriptorSize], descriptorSize ); 
     }
 
-    size_t size() { return points.size(); }
+    Eigen::Map<const Descriptor> getDescriptor( size_t index ) const
+    { 
+	return Eigen::Map<const Descriptor>( &descriptors[index*descriptorSize], descriptorSize ); 
+    }
+
+    size_t size() const 
+    { 
+	return points.size(); 
+    }
 
     void clear() 
     { 
@@ -114,7 +122,7 @@ struct StereoFeatureArray
 	keypoints.clear(); 
     }
 
-    void copyTo( envire::Featurecloud& fc )
+    void copyTo( envire::Featurecloud& fc ) const
     {
 	fc.clear();
 
