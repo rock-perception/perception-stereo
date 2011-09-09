@@ -431,6 +431,9 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
 {
     stereoFeatures.clear();
 
+    // currently we always use the surf descriptor (might change)
+    stereoFeatures.descriptorType = envire::DESCRIPTOR_SURF;
+
     // loop through all features available
     for(size_t i = 0; i < leftMatches.keypoints.size(); i++)
     {
