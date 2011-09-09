@@ -318,7 +318,9 @@ bool StereoFeatures::refineFeatureCorrespondences()
             matchesMask = vector<uchar>( leftPutativeMatches.keypoints.size(), 0 );
             for(size_t i = 0; i < matchesMask.size(); i++)
             {
-                if(fabs(leftPutativeMatches.keypoints[i].pt.y - rightPutativeMatches.keypoints[i].pt.y) < config.maxStereoYDeviation)
+		const double ydev = leftPutativeMatches.keypoints[i].pt.y - rightPutativeMatches.keypoints[i].pt.y;
+		const double disparity = leftPutativeMatches.keypoints[i].pt.x - rightPutativeMatches.keypoints[i].pt.x;
+                if( ydev < config.maxStereoYDeviation && disparity > 0 )
                 {
                     matchesMask[i] = 1;
                     numberOfGood++;
