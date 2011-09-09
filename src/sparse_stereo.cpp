@@ -1,6 +1,7 @@
 #include "sparse_stereo.hpp"
 #include <Eigen/Core>
 #include <iostream>
+#include <opencv2/core/eigen.hpp>
 
 using namespace stereo;
 using namespace std;
@@ -393,42 +394,6 @@ bool StereoFeatures::refineFeatureCorrespondences()
     return !runDefault;
 }
 
-void reprojectPointsTo3D(std::vector<base::Vector3d> *dp, std::vector<base::Vector3d> *d3p, int num, const cv::Mat _Q)
-{
-//        const double bigZ = 10000.;
-
-        double q[4][4];
-        CvMat oldQ = _Q;
-        CvMat Q = cvMat(4, 4, CV_64F, q);
-//        double minDisparity = FLT_MAX;
-
-	// if there is nothing to do, do nothing!
-	if(num < 1)
-		return;
-
-        cvConvert( &oldQ, &Q );
-
-        CvMat *src = cvCreateMat(1, num, CV_64FC3);
-        CvMat *dst = cvCreateMat(1, num, CV_64FC3);
-
-        for(int i = 0; i < num; i++)
-        {
-		cvSet2D(src, 0, i, cvScalar((*dp)[i].x(), (*dp)[i].y(), (*dp)[i].z()));
-	}
-
-	// transform the disparity into z
-	cvPerspectiveTransform(src, dst, &Q);
-
-	// put them back into our structure. convert to meter scale (cm before).
-        for(int i = 0; i < num; i++)
-        {
-		CvScalar t = cvGet2D(dst, 0, i);
-		(*d3p)[i][0] = (double)t.val[0] / 1000.0;
-		(*d3p)[i][1] = (double)t.val[1] / 1000.0;
-		(*d3p)[i][2] = (double)t.val[2] / 1000.0;
-	}
-}
-
 void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
 {
     stereoFeatures.clear();
@@ -436,39 +401,41 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
     // currently we always use the surf descriptor (might change)
     stereoFeatures.descriptorType = envire::DESCRIPTOR_SURF;
 
+    // get Q Projection Matrix as Eigen
+    Eigen::Matrix4d Q;
+    cv2eigen( calib.Q, Q );
+
     // loop through all features available
     for(size_t i = 0; i < leftMatches.keypoints.size(); i++)
     {
         //ok, we found a match. put all the necessary data into the new data structure
-        Eigen::Vector3d v;
+        Eigen::Vector4d v;
         // build the 3d point
-        v[0] = (float)(leftMatches.keypoints[i].pt.x);
-        v[1] = calib.getImageSize().height - (float)(leftMatches.keypoints[i].pt.y);
-        v[2] = (float)(rightMatches.keypoints[i].pt.x - leftMatches.keypoints[i].pt.x);	//the disparity
+        v[0] = leftMatches.keypoints[i].pt.x;
+        v[1] = leftMatches.keypoints[i].pt.y;
+        v[2] = rightMatches.keypoints[i].pt.x - leftMatches.keypoints[i].pt.x; // disparity
+	v[3] = 1.0;
+
+	// perform projection to 3d space
+	// and change to meters instead of mm
+	Eigen::Vector4d vh = Q * v;
+	vh *= .001/vh[3];
 
 	// TODO for the time being take only left keypoints. However, it might
 	// be better to take the keypoint with the strongest response
-	// TODO normalize the size of the feature to the distance
 	envire::KeyPoint kp;
-	kp.size = leftMatches.keypoints[i].size;
+	// calculate the keypointSize from the calibration matrix's fx parameter 
+	//  correct for unit and scale by distance (z.value)
+	const double keypointSize = leftMatches.keypoints[i].size 
+	    / calib.camLeft.camMatrix.at<double>(0,0) * vh[2];
+	kp.size = keypointSize;
 	kp.angle = leftMatches.keypoints[i].angle;
 	kp.response = leftMatches.keypoints[i].response;
 
 	stereoFeatures.push_back( 
-		v, kp, 
+		vh.head<3>(), kp, 
 		Eigen::Map<StereoFeatureArray::Descriptor>( 
 		    leftMatches.descriptors.ptr<float>(i), leftMatches.descriptors.cols ) );
     }
-    // currently the z coordinate only contains the disparity, and x and y
-    // coordinates the screen coordinates. Use these values to really reproject
-    // the points into 3d space
-    reprojectPointsTo3D(&stereoFeatures.points, &stereoFeatures.points, stereoFeatures.size(), calib.Q);
-
-    /*
-    float meanZ = 0;
-    for(int i = 0; i < leftMatches.keypoints.size(); i++)
-       meanZ += stereoFeatures.points[i][2];
-    meanZ /= leftMatches.keypoints.size();
-    */
 }
 
