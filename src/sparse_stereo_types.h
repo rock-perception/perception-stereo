@@ -127,9 +127,10 @@ struct StereoFeatureArray
 	fc.clear();
 
 	std::copy( points.begin(), points.end(), std::back_inserter( fc.vertices ) );
-	std::copy( keypoints.begin(), keypoints.end(), std::back_inserter( fc.keypoints ) );
-	for( size_t i=0; i<size(); i++ )
-	    fc.descriptors.push_back( getDescriptor( i ) );
+	fc.keypoints = keypoints;
+	fc.descriptors = descriptors;
+	fc.descriptorType = descriptorType;
+	fc.descriptorSize = descriptorSize;
     }
 };
 }
