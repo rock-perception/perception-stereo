@@ -18,7 +18,7 @@ void StereoFeatures::setCalibration( const frame_helper::StereoCalibration &cali
     this->calib.setCalibration( calib );
 }
 
-void StereoFeatures::setConfiguration( const FeatureConfiguration &conf )
+void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
 {
     this->config = config;
     initDetector( config.targetNumFeatures );
