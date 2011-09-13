@@ -40,7 +40,7 @@ protected:
     void initDetector( size_t lastNumFeatures );
     void findFeatures( const cv::Mat &image, FeatureInfo& info );
     void crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, 
-	    std::vector<cv::DMatch>& filteredMatches12, int knn = 1 );
+	    std::vector<cv::DMatch>& filteredMatches12, int knn = 1, float distanceFactor = 2.0 );
 
     frame_helper::StereoCalibrationCv calib;
     FeatureConfiguration config;

@@ -174,32 +174,55 @@ void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &righ
     }
 }
 
-void StereoFeatures::crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, cv::vector<cv::DMatch>& filteredMatches12, int knn )
+/** check if a match for knn > 1 is robust, by making sure, the distance to the
+ * next match is further away than the first by a specific factor.
+ */
+bool robustMatch( std::vector<cv::DMatch>& matches, float distanceFactor = 2.0 )
+{
+    if( matches.size() >= 2 )
+    {
+	return matches[0].distance * distanceFactor < matches[1].distance;
+    }
+    return false;
+}
+
+/** 
+ * perform cross checking to make sure that the nearest neighbour relationship
+ * goes both ways. if a knn of greater than 1 is given, a distanceFactor of
+ * greater 1.0 will make the matches more robust, by checking against the next
+ * nn.
+ */
+void StereoFeatures::crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, cv::vector<cv::DMatch>& filteredMatches12, int knn, float distanceFactor )
 {
     filteredMatches12.clear();
 
     std::vector<std::vector<cv::DMatch> > matches12, matches21;
     descriptorMatcher->knnMatch( descriptors1, descriptors2, matches12, knn );
     descriptorMatcher->knnMatch( descriptors2, descriptors1, matches21, knn );
+
     for( size_t m = 0; m < matches12.size(); m++ )
     {
-        bool findCrossCheck = false;
-        for( size_t fk = 0; fk < matches12[m].size(); fk++ )
-        {
-	    cv::DMatch forward = matches12[m][fk];
+	if( knn > 1 && !robustMatch( matches12[m], distanceFactor ) )
+	    continue;
 
-            for( size_t bk = 0; bk < matches21[forward.trainIdx].size(); bk++ )
-            {
-		cv::DMatch backward = matches21[forward.trainIdx][bk];
+	if( !matches12[m].empty() )
+	{
+	    cv::DMatch &forward = matches12[m][0];
+
+	    if( knn > 1 && !robustMatch( matches21[forward.trainIdx], distanceFactor ) )
+		continue;
+
+	    if( !matches21[forward.trainIdx].empty() )
+	    {
+		cv::DMatch backward = matches21[forward.trainIdx][0];
+
                 if( backward.trainIdx == forward.queryIdx )
                 {
                     filteredMatches12.push_back(forward);
-                    findCrossCheck = true;
-                    break;
-                }
-            }
-            if( findCrossCheck ) break;
-        }
+		}
+	    }
+	}
+
     }
 }
 
@@ -216,7 +239,8 @@ bool StereoFeatures::getPutativeStereoCorrespondences()
 
     std::vector<cv::DMatch> stereoCorrespondences;
     // do good cross check matching
-    crossCheckMatching( leftFeatures.descriptors, rightFeatures.descriptors, stereoCorrespondences, 1);
+    crossCheckMatching( leftFeatures.descriptors, rightFeatures.descriptors, 
+	    stereoCorrespondences, config.knn, config.distanceFactor );
 
     // resize the descriptor matrices
     leftPutativeMatches.descriptors.create( stereoCorrespondences.size(),
@@ -319,7 +343,7 @@ bool StereoFeatures::refineFeatureCorrespondences()
             matchesMask = vector<uchar>( leftPutativeMatches.keypoints.size(), 0 );
             for(size_t i = 0; i < matchesMask.size(); i++)
             {
-		const double ydev = leftPutativeMatches.keypoints[i].pt.y - rightPutativeMatches.keypoints[i].pt.y;
+		const double ydev = fabs( leftPutativeMatches.keypoints[i].pt.y - rightPutativeMatches.keypoints[i].pt.y );
 		const double disparity = leftPutativeMatches.keypoints[i].pt.x - rightPutativeMatches.keypoints[i].pt.x;
                 if( ydev < config.maxStereoYDeviation && disparity > 0 )
                 {

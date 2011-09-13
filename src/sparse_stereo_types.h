@@ -51,6 +51,8 @@ struct FeatureConfiguration
 	: debugImage( true ),
 	  targetNumFeatures( 100 ),
 	  maxStereoYDeviation( 5 ),
+	  knn( 1 ),
+	  distanceFactor( 2.0 ),
 	  adaptiveDetectorParam( false ),
 	  detectorType( DETECTOR_SURF ),
 	  filterType( STEREO )
@@ -60,6 +62,9 @@ struct FeatureConfiguration
 
     int targetNumFeatures;
     int maxStereoYDeviation;
+
+    int knn;
+    int distanceFactor;
 
     bool adaptiveDetectorParam;
     DetectorConfiguration detectorConfig;
