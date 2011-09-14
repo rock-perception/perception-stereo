@@ -192,7 +192,7 @@ bool robustMatch( std::vector<cv::DMatch>& matches, float distanceFactor = 2.0 )
  * greater 1.0 will make the matches more robust, by checking against the next
  * nn.
  */
-void StereoFeatures::crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, cv::vector<cv::DMatch>& filteredMatches12, int knn, float distanceFactor )
+void StereoFeatures::crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, std::vector<cv::DMatch>& filteredMatches12, int knn, float distanceFactor )
 {
     filteredMatches12.clear();
 
