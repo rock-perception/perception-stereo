@@ -563,7 +563,9 @@ void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArra
                 }
                 matches_mask.clear();
                 // use the two point lists to find the fundamental matrix
-		cv::Mat fund = findFundamentalMat( cv::Mat(points1), cv::Mat(points2), matches_mask, CV_FM_RANSAC, 1.0, 0.99 );
+		const float outlierDistance = 3.0;
+		const float accuracy = 0.99;
+		cv::Mat fund = findFundamentalMat( cv::Mat(points1), cv::Mat(points2), matches_mask, CV_FM_RANSAC, outlierDistance, accuracy );
 
                 // determine how many good features were detected
                 for( size_t i = 0; i < matches_mask.size(); i++)
