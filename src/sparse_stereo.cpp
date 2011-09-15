@@ -475,3 +475,163 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
     }
 }
 
+void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArray& frame1, const StereoFeatureArray& frame2, int filterMethod )
+{
+    // get features as cv::Mat from arrays
+    // need to const cast here, as opencv doesn't provide a way to supply a const void *
+    const cv::Mat feat1 = 
+	cv::Mat( frame1.size(), frame1.descriptorSize, cv::DataType<float>::type, const_cast<float*>(&frame1.descriptors[0]) ); 
+    const cv::Mat feat2 = 
+	cv::Mat( frame2.size(), frame2.descriptorSize, cv::DataType<float>::type, const_cast<float*>(&frame2.descriptors[0]) ); 
+
+    int numberOfGood = 0;
+    std::vector<cv::DMatch> leftCorrespondences;
+    std::vector<uchar> matches_mask;
+
+    const int minFeatures = 5;
+    if( feat1.rows < minFeatures || feat2.rows < minFeatures )
+    {
+	// we cannot do matching, so simply add all points and be done. This is
+	// done by setting filterMethod = FILTER_NONE and leaving
+	// leftCorrespondences empty.
+        cout << "CalculateInterFrameCorrespondences: (Error) At least 5 features are needed in both frames, currently "
+	    << feat1.rows << " last and " << feat2.rows << " current detected!" << endl;
+        filterMethod = FILTER_NONE;
+    }
+    else
+    {
+        // do cross check matching and pre filtering of features
+	crossCheckMatching( feat1, feat2, 
+		leftCorrespondences, config.knn, config.distanceFactor );
+    }
+
+    // do filtering on the point lists. select one of the filters:
+    switch(filterMethod)
+    {
+        case FILTER_HOMOGRAPHY:
+        case FILTER_FUNDAMENTAL:
+        {
+            // extract the 2d points from the keypoint lists
+            vector<cv::Point2f> points1, points2;
+            for(size_t i = 0; i < leftCorrespondences.size(); i++ )
+            {
+		const base::Vector2d &v1( frame1.keypoints[ leftCorrespondences.at(i).queryIdx ].point );
+		points1.push_back( eigen2cv( v1 ) );
+
+		const base::Vector2d &v2( frame2.keypoints[ leftCorrespondences.at(i).trainIdx ].point );
+		points2.push_back( eigen2cv( v2 ) );
+            }
+
+            if(filterMethod == FILTER_HOMOGRAPHY)
+            {
+                // check if there are enough points for homography extraction
+		const size_t minPoints = 4;
+                if( points1.size() < minPoints || points2.size() < minPoints )	
+                {
+                    cout << "CalculateInterFrameCorrespondences(FILTER_HOMOGRAPHY): At least 4 features are needed in this and the last frame, currently " 
+			<< points1.size() << " in this frame and " << points2.size() << " in the last frame detected!" << endl;
+                    filterMethod = FILTER_NONE;
+                    break;
+                }
+                // use the two point lists to find the homography
+		cv::Mat H12 = findHomography( cv::Mat(points1), cv::Mat(points2), CV_RANSAC, 1.0 );
+         
+                matches_mask = vector<uchar>( points1.size(), 0 );
+                // create the mask: transform the current frame points using the homography, and compare the result with the last frame points. If that is equal (or very near) it is an inlier.
+		cv::Mat transformed_current_points;
+                // create the mask list, which contains the inliers
+                perspectiveTransform( cv::Mat(points1), transformed_current_points, H12 );
+                for(int i = points1.size() -1; i >= 0; i-- )
+                {
+		    const float inlierRadius = 4.0;
+                    if( norm(points2[i] - transformed_current_points.at<cv::Point2f>(i,0)) < inlierRadius ) // inlier 
+                    {
+                        matches_mask[i] = 1;
+                        numberOfGood++;
+                    }
+                }
+            }// end of filterMethod == HOMOGRAPHY
+            else
+            {// filterMethod == FUNDAMENTAL
+                // check if there are enough points for fundamental matrix calculation
+                if(points1.size() < 8 || points2.size() < 8)	
+                {
+                    cout << "CalculateInterFrameCorrespondences(FILTER_FUNDAMENTAL): At least 8 features are needed in this and the last frame, currently " 
+			<< points1.size() << " in this frame and " << points2.size() << " in the last frame detected!" << endl;
+                    filterMethod = FILTER_NONE;
+                    break;
+                }
+                matches_mask.clear();
+                // use the two point lists to find the fundamental matrix
+		cv::Mat fund = findFundamentalMat( cv::Mat(points1), cv::Mat(points2), matches_mask, CV_FM_RANSAC, 1.0, 0.99 );
+
+                // determine how many good features were detected
+                for( size_t i = 0; i < matches_mask.size(); i++)
+                    if(matches_mask[i] == 1)
+                        numberOfGood++;
+            }// end of filterMethod == FUNDAMENTAL
+        }
+            break;
+        case FILTER_INTELLIGENT:
+            matches_mask = vector<uchar>( leftCorrespondences.size(), 0 );
+            break;
+        default:
+            cout << "CalculateInterFrameCorrespondences: (Warn) unrecognized filter method selected, no filtering applied!" << endl;
+            filterMethod = FILTER_NONE;
+        case FILTER_NONE:
+            break;
+    }
+    if(filterMethod == FILTER_NONE)
+    {
+        matches_mask = vector<uchar>( leftCorrespondences.size(), 1 );
+    }
+
+    // record the correspondences between the two frames
+    assert( matches_mask.size() == leftCorrespondences.size() );
+    correspondences.clear();
+
+    for( size_t i = 0; i < matches_mask.size(); i++ )
+    {
+	if( matches_mask[i] )
+	    correspondences.push_back( make_pair(
+			leftCorrespondences.at(i).queryIdx,
+			leftCorrespondences.at(i).trainIdx ) );
+    }
+
+    cout << "Number of detected Features: " << frame1.keypoints.size() << " Number of putative inter-frame matches: " 
+	<< leftCorrespondences.size() << " number of filtered inter-frame matches: " << numberOfGood << endl;
+
+    return;
+}
+
+cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2 )
+{
+    // create the debug image
+    cv::Size debugSize = 
+	cv::Size( debug1.size().width, debug1.size().height + debug2.size().height );
+
+    cv::Mat debugImage;
+    debugImage.create( debugSize, CV_8UC3 );
+
+    const int debugTopOffset = debug1.size().height;
+
+    cv::Mat upperRoi( debugImage, cv::Rect( 0, 0, debug1.size().width, debug1.size().height ) );
+    debug1.copyTo( upperRoi );
+
+    cv::Mat lowerRoi( debugImage, cv::Rect( 0, debugTopOffset, debug2.size().width, debug2.size().height ) );
+    debug2.copyTo( lowerRoi );
+
+    const cv::Scalar color = cv::Scalar(255, 0, 0);
+    const int width = 1;
+    for( size_t i = 0; i < correspondences.size(); i++ )
+    {
+	cv::Point center1, center2;
+	center1 = eigen2cv( frame1.keypoints[ correspondences[i].first ].point );
+	center2 = eigen2cv( frame2.keypoints[ correspondences[i].second ].point );
+
+	center2.y += debugTopOffset;
+	cv::line( debugImage, center1, center2, color, width);
+    }
+
+    return debugImage;
+}
