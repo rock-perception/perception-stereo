@@ -21,11 +21,11 @@ enum DETECTOR
 
 enum FILTER
 {
-    NONE,
-    HOMOGRAPHY,
-    FUNDAMENTAL,
-    INTELLIGENT,
-    STEREO,
+    FILTER_NONE,
+    FILTER_HOMOGRAPHY,
+    FILTER_FUNDAMENTAL,
+    FILTER_INTELLIGENT,
+    FILTER_STEREO,
 };
 
 struct DetectorConfiguration
@@ -55,7 +55,7 @@ struct FeatureConfiguration
 	  distanceFactor( 2.0 ),
 	  adaptiveDetectorParam( false ),
 	  detectorType( DETECTOR_SURF ),
-	  filterType( STEREO )
+	  filterType( FILTER_STEREO )
     {}
 
     bool debugImage;

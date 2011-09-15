@@ -297,7 +297,7 @@ bool StereoFeatures::refineFeatureCorrespondences()
     // select the type of filtering
     switch( config.filterType )
     {
-        case HOMOGRAPHY:
+	case FILTER_HOMOGRAPHY:
         {
             // check if there are enough points for homography extraction
             if(leftPutativeMatches.keypoints.size() < 4 || rightPutativeMatches.keypoints.size() < 4)	
@@ -329,7 +329,7 @@ bool StereoFeatures::refineFeatureCorrespondences()
             }
             break;
         }
-        case FUNDAMENTAL:
+        case FILTER_FUNDAMENTAL:
         {
             // check if there are enough points for fundamental matrix extraction
             if(leftPutativeMatches.keypoints.size() < 8 || rightPutativeMatches.keypoints.size() < 8)	
@@ -349,7 +349,7 @@ bool StereoFeatures::refineFeatureCorrespondences()
                     numberOfGood++;
             break;
         }
-        case STEREO:
+        case FILTER_STEREO:
             // just check, if the epipolar geometry is maintained for each match
             matchesMask = vector<uchar>( leftPutativeMatches.keypoints.size(), 0 );
             for(size_t i = 0; i < matchesMask.size(); i++)
@@ -363,7 +363,7 @@ bool StereoFeatures::refineFeatureCorrespondences()
                 }
             }
             break;
-        case NONE:
+        case FILTER_NONE:
 	    runDefault = true;
             break;
         default:
