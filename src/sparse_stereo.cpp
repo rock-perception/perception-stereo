@@ -6,6 +6,17 @@
 using namespace stereo;
 using namespace std;
 
+cv::Point eigen2cv( const Eigen::Vector2d& point )
+{
+    return cv::Point( point.x(), point.y() );
+}
+
+Eigen::Vector2d cv2eigen( const cv::Point& point )
+{
+    return Eigen::Vector2d( point.x, point.y );
+}
+
+
 StereoFeatures::StereoFeatures()
 {
     descriptorExtractor = new cv::SurfDescriptorExtractor(4, 3, false);
@@ -455,6 +466,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
 	kp.size = keypointSize;
 	kp.angle = leftMatches.keypoints[i].angle;
 	kp.response = leftMatches.keypoints[i].response;
+	kp.point = cv2eigen( leftMatches.keypoints[i].pt );
 
 	stereoFeatures.push_back( 
 		vh.head<3>(), kp, 
