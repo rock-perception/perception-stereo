@@ -18,3 +18,4 @@ rock_library(stereo
     DEPS_PKGCONFIG opencv frame_helper libelas envire
     HEADERS configuration.h densestereo.h dense_stereo_types.h sparse_stereo.hpp sparse_stereo_types.h)
 
+add_subdirectory( ransac )
