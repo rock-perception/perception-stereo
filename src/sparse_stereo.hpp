@@ -36,7 +36,9 @@ public:
 
     /** calculate the relation between two stereo pairs
      */
+    void calculateInterFrameCorrespondences( const envire::Featurecloud* fc1, const envire::Featurecloud* fc2, int filterMethod );
     void calculateInterFrameCorrespondences( const StereoFeatureArray& frame1, const StereoFeatureArray& frame2, int filterMethod );
+    void calculateInterFrameCorrespondences( const cv::Mat& feat1, const std::vector<envire::KeyPoint> keyp1, const cv::Mat& feat2, const std::vector<envire::KeyPoint> keyp2, int filterMethod );
 
     /** Get the correspondences of the last interframe calculation 
      * @return - a vector of an std::pair, where first is an index to frame1 and

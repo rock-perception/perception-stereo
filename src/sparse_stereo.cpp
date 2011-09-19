@@ -475,6 +475,15 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
     }
 }
 
+void StereoFeatures::calculateInterFrameCorrespondences( const envire::Featurecloud* fc1, const envire::Featurecloud* fc2, int filterMethod )
+{
+    // get features from array
+    const cv::Mat feat1 = cv::Mat( fc1->size(), fc1->descriptorSize, cv::DataType<float>::type, const_cast<float*>(&fc1->descriptors[0])); 
+    const cv::Mat feat2 = cv::Mat( fc2->size(), fc2->descriptorSize, cv::DataType<float>::type, const_cast<float*>(&fc2->descriptors[0])); 
+
+    calculateInterFrameCorrespondences( feat1, fc1->keypoints, feat2, fc2->keypoints, filterMethod );
+}
+
 void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArray& frame1, const StereoFeatureArray& frame2, int filterMethod )
 {
     // get features as cv::Mat from arrays
@@ -484,6 +493,11 @@ void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArra
     const cv::Mat feat2 = 
 	cv::Mat( frame2.size(), frame2.descriptorSize, cv::DataType<float>::type, const_cast<float*>(&frame2.descriptors[0]) ); 
 
+    calculateInterFrameCorrespondences( feat1, frame1.keypoints, feat2, frame2.keypoints, filterMethod );
+}
+
+void StereoFeatures::calculateInterFrameCorrespondences( const cv::Mat& feat1, const std::vector<envire::KeyPoint> keyp1, const cv::Mat& feat2, const std::vector<envire::KeyPoint> keyp2, int filterMethod )
+{
     int numberOfGood = 0;
     std::vector<cv::DMatch> leftCorrespondences;
     std::vector<uchar> matches_mask;
@@ -515,10 +529,10 @@ void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArra
             vector<cv::Point2f> points1, points2;
             for(size_t i = 0; i < leftCorrespondences.size(); i++ )
             {
-		const base::Vector2d &v1( frame1.keypoints[ leftCorrespondences.at(i).queryIdx ].point );
+		const base::Vector2d &v1( keyp1[ leftCorrespondences.at(i).queryIdx ].point );
 		points1.push_back( eigen2cv( v1 ) );
 
-		const base::Vector2d &v2( frame2.keypoints[ leftCorrespondences.at(i).trainIdx ].point );
+		const base::Vector2d &v2( keyp2[ leftCorrespondences.at(i).trainIdx ].point );
 		points2.push_back( eigen2cv( v2 ) );
             }
 
@@ -600,7 +614,7 @@ void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArra
 			leftCorrespondences.at(i).trainIdx ) );
     }
 
-    cout << "Number of detected Features: " << frame1.keypoints.size() << " Number of putative inter-frame matches: " 
+    cout << "Number of detected Features: " << keyp1.size() << " Number of putative inter-frame matches: " 
 	<< leftCorrespondences.size() << " number of filtered inter-frame matches: " << numberOfGood << endl;
 
     return;
@@ -632,6 +646,12 @@ cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const St
 	center2 = eigen2cv( frame2.keypoints[ correspondences[i].second ].point );
 
 	center2.y += debugTopOffset;
+	cv::line( debugImage, center1, center2, color, width);
+
+	// for testing
+	center1.x += debugRightOffset;
+	center2.x += debugRightOffset;
+	center2.y -= debugTopOffset;
 	cv::line( debugImage, center1, center2, color, width);
     }
 
