@@ -38,7 +38,10 @@ public:
      */
     void calculateInterFrameCorrespondences( const envire::Featurecloud* fc1, const envire::Featurecloud* fc2, int filterMethod );
     void calculateInterFrameCorrespondences( const StereoFeatureArray& frame1, const StereoFeatureArray& frame2, int filterMethod );
-    void calculateInterFrameCorrespondences( const cv::Mat& feat1, const std::vector<envire::KeyPoint> keyp1, const cv::Mat& feat2, const std::vector<envire::KeyPoint> keyp2, int filterMethod );
+    void calculateInterFrameCorrespondences( 
+	    const cv::Mat& feat1, const std::vector<envire::KeyPoint>& keyp1, const std::vector<Eigen::Vector3d>& points1,
+	    const cv::Mat& feat2, const std::vector<envire::KeyPoint>& keyp2, const std::vector<Eigen::Vector3d>& points2, 
+	    int filterMethod );
 
     /** Get the correspondences of the last interframe calculation 
      * @return - a vector of an std::pair, where first is an index to frame1 and
@@ -46,6 +49,11 @@ public:
      *	    calculateDepthInformationBetweenCorrespondences()
      */
     std::vector<std::pair<long,long> > getInterFrameCorrespondences() { return correspondences; }
+
+    /** Get the transform calculated at the last interframe correspondence calculation.
+     * Only valid if the filter type was set to ISOMETRY and the number of correspondences > 3.
+     */
+    base::Affine3d getInterFrameCorrespondenceTransform() { return correspondenceTransform; }
 
     /** get the debug image for a stereo pair, if debugImage has been 
      * activated in the configuration.
@@ -91,6 +99,7 @@ protected:
 
     StereoFeatureArray stereoFeatures;
     std::vector<std::pair<long,long> > correspondences;
+    base::Affine3d correspondenceTransform;
 
     cv::Ptr<cv::FeatureDetector> detector;
     cv::Ptr<cv::DescriptorExtractor> descriptorExtractor;

@@ -2,6 +2,7 @@
 #include <Eigen/Core>
 #include <iostream>
 #include <opencv2/core/eigen.hpp>
+#include <envire/ransac.hpp>
 
 using namespace stereo;
 using namespace std;
@@ -481,7 +482,7 @@ void StereoFeatures::calculateInterFrameCorrespondences( const envire::Featurecl
     const cv::Mat feat1 = cv::Mat( fc1->size(), fc1->descriptorSize, cv::DataType<float>::type, const_cast<float*>(&fc1->descriptors[0])); 
     const cv::Mat feat2 = cv::Mat( fc2->size(), fc2->descriptorSize, cv::DataType<float>::type, const_cast<float*>(&fc2->descriptors[0])); 
 
-    calculateInterFrameCorrespondences( feat1, fc1->keypoints, feat2, fc2->keypoints, filterMethod );
+    calculateInterFrameCorrespondences( feat1, fc1->keypoints, fc1->vertices, feat2, fc2->keypoints, fc2->vertices, filterMethod );
 }
 
 void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArray& frame1, const StereoFeatureArray& frame2, int filterMethod )
@@ -493,10 +494,17 @@ void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArra
     const cv::Mat feat2 = 
 	cv::Mat( frame2.size(), frame2.descriptorSize, cv::DataType<float>::type, const_cast<float*>(&frame2.descriptors[0]) ); 
 
-    calculateInterFrameCorrespondences( feat1, frame1.keypoints, feat2, frame2.keypoints, filterMethod );
+    std::vector<Eigen::Vector3d> p1, p2;
+    std::copy( frame1.points.begin(), frame1.points.end(), std::back_inserter( p1 ) );
+    std::copy( frame2.points.begin(), frame2.points.end(), std::back_inserter( p2 ) );
+
+    calculateInterFrameCorrespondences( feat1, frame1.keypoints, p1, feat2, frame2.keypoints, p2, filterMethod );
 }
 
-void StereoFeatures::calculateInterFrameCorrespondences( const cv::Mat& feat1, const std::vector<envire::KeyPoint> keyp1, const cv::Mat& feat2, const std::vector<envire::KeyPoint> keyp2, int filterMethod )
+void StereoFeatures::calculateInterFrameCorrespondences( 
+	const cv::Mat& feat1, const std::vector<envire::KeyPoint>& keyp1, const std::vector<Eigen::Vector3d>& points1,
+	const cv::Mat& feat2, const std::vector<envire::KeyPoint>& keyp2, const std::vector<Eigen::Vector3d>& points2, 
+	int filterMethod )
 {
     int numberOfGood = 0;
     std::vector<cv::DMatch> leftCorrespondences;
@@ -522,6 +530,40 @@ void StereoFeatures::calculateInterFrameCorrespondences( const cv::Mat& feat1, c
     // do filtering on the point lists. select one of the filters:
     switch(filterMethod)
     {
+	case FILTER_ISOMETRY:
+	{
+	    // find an isometry transformation between the 3d points 
+	    // using ransac
+	    Eigen::Affine3d best_model;
+	    std::vector<size_t> best_inliers;
+	    const double DIST_THRESHOLD = config.isometryFilterThreshold;
+
+	    std::vector<Eigen::Vector3d> x, p;
+	    for( size_t i = 0; i < leftCorrespondences.size(); i++ )
+	    {
+		const Eigen::Vector3d &v1( points1[leftCorrespondences[i].queryIdx]  );
+		const Eigen::Vector3d &v2( points2[leftCorrespondences[i].trainIdx]  );
+		//const double max_dist = 15.0;
+		//if( v1.norm() < max_dist && v2.norm() < max_dist )
+		{
+		    x.push_back( v1 );
+		    p.push_back( v2 );
+		}
+	    }
+
+	    envire::ransac::FitTransform fit( x, p, DIST_THRESHOLD );
+	    envire::ransac::ransacSingleModel( fit, 3, DIST_THRESHOLD, best_model, best_inliers, config.isometryFilterMaxSteps );
+
+	    correspondenceTransform = best_model;
+
+            matches_mask = vector<uchar>( leftCorrespondences.size(), 0 );
+	    for( size_t i=0; i<best_inliers.size(); i++ )
+	    {
+		matches_mask[best_inliers[i]] = 1;
+		numberOfGood++;
+	    }
+	}
+	    break;
         case FILTER_HOMOGRAPHY:
         case FILTER_FUNDAMENTAL:
         {

@@ -26,6 +26,7 @@ enum FILTER
     FILTER_FUNDAMENTAL,
     FILTER_INTELLIGENT,
     FILTER_STEREO,
+    FILTER_ISOMETRY,
 };
 
 struct DetectorConfiguration
@@ -53,18 +54,50 @@ struct FeatureConfiguration
 	  maxStereoYDeviation( 5 ),
 	  knn( 1 ),
 	  distanceFactor( 2.0 ),
+	  isometryFilterMaxSteps( 1000 ),
+	  isometryFilterThreshold( 0.1 ),
 	  adaptiveDetectorParam( false ),
 	  detectorType( DETECTOR_SURF ),
 	  filterType( FILTER_STEREO )
     {}
 
+    /** if set to true, the library will generate debug images during the
+     * processing of the data
+     */
     bool debugImage;
 
+    /** the target number of features from the detector
+     */
     int targetNumFeatures;
+
+    /* the difference in pixels, that the stereo matcher allows, so that two
+     * features are still considered epipolar
+     */
     int maxStereoYDeviation;
 
+    /** number of neares neighbours to check for feature correspondence.  a
+     * value of 1 will just check the next neighbour. A value of 2 will check
+     * the two nearest neighbours and apply the distanceFactor criterion for
+     * filtering correspondences.
+     */
     int knn;
+
+    /** only used if knn >=2. For two features to be considered corresponding,
+     * the next nearest neighbour needs to be (distance * distanceFactor) away
+     * from the current neighbour. A value of 1.0 is equal to having knn = 1. A
+     * value of 2.0 will make sure matches are quite unique. Usually something
+     * like 1.6 is used.
+     */
     int distanceFactor;
+
+    /** maximum Ransac steps the isometry filter should use
+     */
+    int isometryFilterMaxSteps;
+
+    /** threshold error value for a point to still be considered an inlier in
+     * the isometryFilter
+     */
+    double isometryFilterThreshold;
 
     bool adaptiveDetectorParam;
     DetectorConfiguration detectorConfig;
