@@ -3,6 +3,7 @@
 #include <iostream>
 #include <opencv2/core/eigen.hpp>
 #include <envire/ransac.hpp>
+#include "psurf.h"
 
 using namespace stereo;
 using namespace std;
@@ -20,7 +21,7 @@ Eigen::Vector2d cv2eigen( const cv::Point& point )
 
 StereoFeatures::StereoFeatures()
 {
-    descriptorExtractor = new cv::SurfDescriptorExtractor(4, 3, false);
+    descriptorExtractor = new cv::PSurfDescriptorExtractor(4, 3, false);
     descriptorMatcher = cv::DescriptorMatcher::create("FlannBased");
     initDetector( config.targetNumFeatures );
 }
