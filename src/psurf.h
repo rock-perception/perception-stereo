@@ -19,7 +19,9 @@ public:
     CV_WRAP_AS(detect) void operator()(const Mat& img, const Mat& mask,
                     CV_OUT vector<KeyPoint>& keypoints) const;
     //! finds the keypoints and computes their descriptors. Optionally it can compute descriptors for the user-provided keypoints
-    CV_WRAP_AS(detect) void operator()(const Mat& img, const Mat& mask,
+    CV_WRAP_AS(detect) void operator()(const Mat& img, 
+		    const Mat& dist_img,
+		    const Mat& mask,
                     CV_OUT vector<KeyPoint>& keypoints,
                     CV_OUT vector<float>& descriptors,
                     bool useProvidedKeypoints=false) const;
@@ -38,6 +40,8 @@ public:
 
     virtual int descriptorSize() const;
     virtual int descriptorType() const;
+
+    void compute( const Mat& image, const Mat& distance_image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
 
 protected:
     virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;

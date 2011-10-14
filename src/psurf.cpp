@@ -544,12 +544,13 @@ struct PSURFInvoker
 
     PSURFInvoker( const CvSURFParams* _params,
                  CvSeq* _keypoints, CvSeq* _descriptors,
-                 const CvMat* _img, const CvMat* _sum )
+                 const CvMat* _img, const CvMat* _dist_img, const CvMat* _sum )
     {
         params = _params;
         keypoints = _keypoints;
         descriptors = _descriptors;
         img = _img;
+	dist_img = _dist_img;
         sum = _sum;
 
         /* Simple bound for number of grid points in circle of radius ORI_RADIUS */
@@ -767,8 +768,7 @@ struct PSURFInvoker
              makes calculating the gradients with wavelets of size 2s easy */
             cvResize( &win, &_patch, CV_INTER_AREA );
 
-	    // DEBUG: write size to disk
-
+	    // DEBUG: write patch to disk
 	    static int index = 0;
 	    std::stringstream fn;
 	    fn << "/tmp/patch" << index << ".png";
@@ -857,6 +857,7 @@ struct PSURFInvoker
     /* Parameters */
     const CvSURFParams* params;
     const CvMat* img;
+    const CvMat* dist_img;
     const CvMat* sum;
     CvSeq* keypoints;
     CvSeq* descriptors;
@@ -875,7 +876,9 @@ const float PSURFInvoker::DESC_SIGMA     = 3.3f;
 
 
 CV_IMPL void
-cvExtractPSURF( const CvArr* _img, const CvArr* _mask,
+cvExtractPSURF( const CvArr* _img, 
+		const CvArr* _dist_img,
+		const CvArr* _mask,
                CvSeq** _keypoints, CvSeq** _descriptors,
                CvMemStorage* storage, CvSURFParams params,
                int useProvidedKeyPts)
@@ -889,6 +892,7 @@ cvExtractPSURF( const CvArr* _img, const CvArr* _mask,
 
     CvSeq *keypoints, *descriptors = 0;
     CvMat imghdr, *img = cvGetMat(_img, &imghdr);
+    CvMat dist_imghdr, *dist_img = _dist_img ? cvGetMat(_dist_img, &dist_imghdr) : 0;
     CvMat maskhdr, *mask = _mask ? cvGetMat(_mask, &maskhdr) : 0;
 
     int descriptor_size = params.extended ? 128 : 64;
@@ -937,9 +941,9 @@ cvExtractPSURF( const CvArr* _img, const CvArr* _mask,
     {
 #ifdef HAVE_TBB
         cv::parallel_for(cv::BlockedRange(0, N),
-                     cv::PSURFInvoker(&params, keypoints, descriptors, img, sum) );
+                     cv::PSURFInvoker(&params, keypoints, descriptors, img, dist_img, sum) );
 #else
-	    cv::PSURFInvoker invoker(&params, keypoints, descriptors, img, sum);
+	    cv::PSURFInvoker invoker(&params, keypoints, descriptors, img, dist_img, sum);
 	    invoker(cv::BlockedRange(0, N));
 #endif
     }
@@ -1022,7 +1026,8 @@ void PSURF::operator()(const Mat& img, const Mat& mask,
         pmask = &(_mask = mask);
     MemStorage storage(cvCreateMemStorage(0));
     Seq<CvSURFPoint> kp;
-    cvExtractPSURF(&_img, pmask, &kp.seq, 0, storage, *(const CvSURFParams*)this, 0);
+    Mat _dist_img;
+    cvExtractPSURF(&_img, &_dist_img, pmask, &kp.seq, 0, storage, *(const CvSURFParams*)this, 0);
     Seq<CvSURFPoint>::iterator it = kp.begin();
     size_t i, n = kp.size();
     keypoints.resize(n);
@@ -1034,12 +1039,16 @@ void PSURF::operator()(const Mat& img, const Mat& mask,
     }
 }
 
-void PSURF::operator()(const Mat& img, const Mat& mask,
+void PSURF::operator()(const Mat& img, 
+		const Mat& dist_img,
+		const Mat& mask,
                 vector<KeyPoint>& keypoints,
                 vector<float>& descriptors,
                 bool useProvidedKeypoints) const
 {
-    CvMat _img = img, _mask, *pmask = 0;
+    CvMat _img = img, _dist_img, *pdist_img = 0, _mask, *pmask = 0;
+    if( dist_img.data )
+	pdist_img = &(_dist_img = dist_img);
     if( mask.data )
         pmask = &(_mask = mask);
     MemStorage storage(cvCreateMemStorage(0));
@@ -1057,7 +1066,7 @@ void PSURF::operator()(const Mat& img, const Mat& mask,
         }
     }
 
-    cvExtractPSURF(&_img, pmask, &kp.seq, &d, storage,
+    cvExtractPSURF(&_img, pdist_img, pmask, &kp.seq, &d, storage,
         *(const CvSURFParams*)this, useProvidedKeypoints);
 
     // input keypoints can be filtered in cvExtractSURF()
@@ -1088,7 +1097,8 @@ PSurfDescriptorExtractor::PSurfDescriptorExtractor( int nOctaves,
     : surf( 0.0, nOctaves, nOctaveLayers, extended, upright )
 {}
 
-void PSurfDescriptorExtractor::computeImpl( const Mat& image,
+void PSurfDescriptorExtractor::compute( const Mat& image,
+					const Mat& distance_image,
                                            vector<KeyPoint>& keypoints,
                                            Mat& descriptors) const
 {
@@ -1099,11 +1109,18 @@ void PSurfDescriptorExtractor::computeImpl( const Mat& image,
     Mat grayImage = image;
     if( image.type() != CV_8U ) cvtColor( image, grayImage, CV_BGR2GRAY );
 
-    surf(grayImage, mask, keypoints, _descriptors, useProvidedKeypoints);
+    surf(grayImage, distance_image, mask, keypoints, _descriptors, useProvidedKeypoints);
 
     descriptors.create((int)keypoints.size(), (int)surf.descriptorSize(), CV_32FC1);
     assert( (int)_descriptors.size() == descriptors.rows * descriptors.cols );
     std::copy(_descriptors.begin(), _descriptors.end(), descriptors.begin<float>());
+}
+
+void PSurfDescriptorExtractor::computeImpl( const Mat& image,
+                                           vector<KeyPoint>& keypoints,
+                                           Mat& descriptors) const
+{
+    compute( image, Mat(), keypoints, descriptors );
 }
 
 void PSurfDescriptorExtractor::read( const FileNode &fn )
