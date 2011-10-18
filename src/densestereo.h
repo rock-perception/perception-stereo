@@ -7,9 +7,22 @@
 #include <libelas/elas.h>
 #include <frame_helper/CalibrationCv.h>
 #include "dense_stereo_types.h"
+#include <base/samples/distance_image.h>
 
 namespace stereo {
 
+/** 
+ * This class performs dense stereo calculation and is mainly a wrapper to
+ * libelas. After construction, the setStereoCalibration method needs to be
+ * called with a valid calibration. Configuration itself has sane defaults, but
+ * can be changed any time.  process_FramePair produces a disparity image,
+ * which by itself isn't all that usefull (function will probably be made
+ * private soon). getDistanceImage is more likely what you want to call, which
+ * produces images where the actual distance is encoded as a float. Use the
+ * createDistanceImage method beforehand to get the cv::Mat to pass as a
+ * parameter to getDistanceImage to get the base::samples::distance_image type
+ * filled from this class.
+ */
 class DenseStereo {
   
 public:
@@ -36,9 +49,60 @@ public:
    * @param right_output_frame right output frame
    * @param isRectified tells the function if the input images are already rectified
    */  
-  void process_FramePair (const cv::Mat &left_frame, const cv::Mat &right_frame,
+  void processFramePair(const cv::Mat &left_frame, const cv::Mat &right_frame,
 			  cv::Mat &left_output_frame, cv::Mat &right_output_frame,
 			  bool isRectified = false );
+
+  /**
+   * perform conversion from disparity to distance image
+   */
+  void getDistanceImages( cv::Mat &left_disp_image, cv::Mat &right_disp_image );
+
+  /** 
+   * computes the disparity images and calculates the distance images from them
+   * @param left_frame left input frame
+   * @param right_frame right input frame
+   * @param left_output_frame left distance image
+   * @param right_output_frame right distance image 
+   * @param isRectified tells the function if the input images are already rectified
+   */
+  void getDistanceImages( const cv::Mat &left_frame, const cv::Mat &right_frame,
+			  cv::Mat &left_output_frame, cv::Mat &right_output_frame,
+			  bool isRectified = false );
+
+  /** 
+   * prepare a distance image from the provided camera calibration
+   * the resulting cv::Mat shares the same data buffer as the dist_image
+   * and can be used as input to getDistanceImages
+   *
+   * @param calib - the calibration for the camera to use
+   * @param dist_image - the dist_image which will be filled with the calib data and image size
+   * @result cv::Mat which shares a data buffer with dist_image
+   */
+  cv::Mat createDistanceImage( 
+	  frame_helper::CameraCalibrationCv const& calib, 
+	  base::samples::DistanceImage& dist_image );
+
+  /**
+   * convenience method which doesn't require a calibration object
+   * but uses the camera calibration for the left camera
+   */
+  cv::Mat createLeftDistanceImage( 
+	  base::samples::DistanceImage& dist_image )
+  {
+      return createDistanceImage( calParam.camLeft, dist_image );
+  }
+
+  /**
+   * convenience method which doesn't require a calibration object
+   * but uses the camera calibration for the right camera
+   */
+  cv::Mat createRightDistanceImage( 
+	  base::samples::DistanceImage& dist_image )
+  {
+      return createDistanceImage( calParam.camRight, dist_image );
+  }
+			  
   
 private:
   ///instance of libElas
