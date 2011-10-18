@@ -75,7 +75,7 @@ void DenseStereo::cvtCvMatToGrayscaleImage(cv::Mat &image) {
 }
 
 // computes disparities of image input pair left_frame, right_frame
-void DenseStereo::process_FramePair (const cv::Mat &left_frame,
+void DenseStereo::processFramePair (const cv::Mat &left_frame,
                                      const cv::Mat &right_frame,
 				     cv::Mat &left_output_frame,
                                      cv::Mat &right_output_frame,
@@ -136,4 +136,72 @@ void DenseStereo::process_FramePair (const cv::Mat &left_frame,
                 right_output_frame.ptr<float>(),
                 dims);
 }
+
+void disparityToDistance( cv::Mat &disp, float dist_factor )
+{
+    cv::MatIterator_<float> it = disp.begin<float>(), it_end = disp.end<float>();
+    for(; it != it_end; ++it)
+    {
+	const float disparity = *it;
+	*it = disparity > 0 ? 
+	    dist_factor / disparity : 
+	    std::numeric_limits<float>::quiet_NaN();
+
+    }
+}
+
+void DenseStereo::getDistanceImages( cv::Mat &left_disp_image, cv::Mat &right_disp_image )
+{
+    const frame_helper::StereoCalibration &calib( calParam.getCalibration() );
+
+    // perform conversion to distance image
+    disparityToDistance( left_disp_image,
+	    fabs( calib.camLeft.fx * calib.extrinsic.tx * 1e-3 ) );
+    
+    disparityToDistance( right_disp_image,
+	    fabs( calib.camRight.fx * calib.extrinsic.tx * 1e-3 ) );
+}
+
+void DenseStereo::getDistanceImages( const cv::Mat &left_frame, const cv::Mat &right_frame,
+	cv::Mat &left_output_frame, cv::Mat &right_output_frame,
+	bool isRectified )
+{
+    processFramePair( left_frame, right_frame, left_output_frame, right_output_frame, isRectified );
+    getDistanceImages( left_output_frame, right_output_frame );
+}
+
+cv::Mat DenseStereo::createDistanceImage( 
+	frame_helper::CameraCalibrationCv const& calibcv, base::samples::DistanceImage& distanceFrame )
+{
+    const size_t 
+	width = calibcv.getImageSize().width, 
+	height = calibcv.getImageSize().height, 
+	size = width * height;
+
+    // pre-allocate the memory for the output disparity map, so we don't
+    // have to copy it. This means we have to assert that the width and
+    // height is the same for input and resulting disparity images
+    distanceFrame.data.resize( size );	
+    distanceFrame.height = height;
+    distanceFrame.width = width;	
+
+    const frame_helper::CameraCalibration &calib( calibcv.getCalibration() );
+
+    // scale and center parameters of the distance image are the inverse of the
+    // f and c values from the camera calibration. 
+    //
+    // so analogous for x and y we get scale = 1/f and offset = -c/f
+    // 
+    distanceFrame.scale_x = 1.0f / calib.fx;
+    distanceFrame.scale_y = 1.0f / calib.fy;
+    distanceFrame.center_x = -calib.cx / calib.fx; 
+    distanceFrame.center_y = -calib.cy / calib.fy; 
+
+    // wrap the data member of the distanceImage into a cv::Mat
+    cv::Mat result( width, height, cv::DataType<float>::type,
+	    reinterpret_cast<uint8_t *>( &distanceFrame.data[0] ) );
+
+    return result;
+}
+
 }
