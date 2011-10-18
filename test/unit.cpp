@@ -1,48 +1,38 @@
-#define BOOST_TEST_MODULE DenseStereoTest 
+#define BOOST_TEST_MODULE StereoTest 
 #include <boost/test/included/unit_test.hpp>
 
-#include <vizkit/QtThreadedWidget.hpp>
-#include <vizkit/QVisualizationTestWidget.hpp>
-#include <vizkit/DistanceImageVisualization.hpp>
-#include <iostream>
+#include <frame_helper/CalibrationCv.h>
+#include <stereo/sparse_stereo.hpp>
+#include <stereo/densestereo.h>
 
-BOOST_AUTO_TEST_CASE( viz_test ) 
+#include "opencv2/highgui/highgui.hpp"
+
+frame_helper::StereoCalibration getTestCalibration()
 {
-    std::cout << "Testing Dense Stereo Image" << std::endl;
-    QtThreadedWidget<
-	vizkit::QVisualizationTestWidget<
-	    vizkit::DistanceImageVisualization, 
-	    base::samples::DistanceImage> > app;
-    app.start();
-    std::cout << "Close the visualization window to abort this test." << std::endl;
-
-    const size_t width = 640, height = 480;
-
-    base::samples::DistanceImage image;
-    image.width = width;
-    image.height = height;
-    image.scale_x = 1.0/width;
-    image.scale_y = 1.0/width;
-    image.center_x = 0.5;
-    image.center_y = 0.5*height/width;
-    image.data.resize(width*height);
-
-    for( int i=0; i<1000 && app.isRunning(); i++ )
+    frame_helper::StereoCalibration calib = 
     {
-        double r = i/100.0;
-	for( size_t x=0; x<width; x++ )
-	{
-	    for( size_t y=0; y<height; y++ )
-	    {
-		float px = x / static_cast<float>(width);
-		float py = y / static_cast<float>(width); 
+	{280.88145,   281.69324,  320.14464,   233.86583,  -0.00601,   0.00475,   0.00069,   0.00017},
+	{284.24943,   285.02469,  320.04661,   233.68118,  -0.00492,   0.00369,   0.00033,   0.00083},
+	{-251.39129,   -0.46770,  -3.91264,   -0.00439,   -0.00603,  0.01186 }
+    };
 
-		float d = sin(px + r) + cos(py);
-		image.data[width*y+x] = d;
-	    }
-	}
+    return calib;
+}
 
-        app.getWidget()->updateData( image );
-        usleep( 10000 );
-    }
+
+BOOST_AUTO_TEST_CASE( dense_test ) 
+{
+    stereo::DenseStereo dense;
+
+    cv::Mat left = cv::imread( "test/left.png" );
+    cv::Mat right = cv::imread( "test/right.png" );
+
+    dense.setStereoCalibration( getTestCalibration(), left.size().width, left.size().height );
+
+    cv::Mat ldisp, rdisp;
+
+    dense.processFramePair( left, right, ldisp, rdisp, false );
+
+    cv::imwrite( "build/test/ldisp.png", ldisp );
+    cv::imwrite( "build/test/rdisp.png", rdisp );
 }
