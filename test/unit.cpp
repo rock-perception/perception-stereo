@@ -35,4 +35,9 @@ BOOST_AUTO_TEST_CASE( dense_test )
 
     cv::imwrite( "build/test/ldisp.png", ldisp );
     cv::imwrite( "build/test/rdisp.png", rdisp );
+
+    dense.getDistanceImages( ldisp, rdisp );
+
+    cv::imwrite( "build/test/ldist.png", ldisp );
+    cv::imwrite( "build/test/rdist.png", rdisp );
 }
