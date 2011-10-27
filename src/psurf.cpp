@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <stereo/homography.h>
 
 /* Original code has been submitted by Liu Liu. Here is the copyright.
 ----------------------------------------------------------------------------------
@@ -544,7 +545,7 @@ struct PSURFInvoker
 
     PSURFInvoker( const CvSURFParams* _params,
                  CvSeq* _keypoints, CvSeq* _descriptors,
-                 const CvMat* _img, const CvMat* _dist_img, const CvMat* _sum )
+                 const CvMat* _img, const base::samples::DistanceImage* _dist_img, const CvMat* _sum )
     {
         params = _params;
         keypoints = _keypoints;
@@ -616,7 +617,9 @@ struct PSURFInvoker
         Ptr<CvMat> winbuf = cvCreateMat( 1, maxSize > 0 ? maxSize*maxSize : 1, CV_8U );
         for( k = k1; k < k2; k++ )
         {
-            const int* sum_ptr = sum->data.i;
+            int* sum_ptr = sum->data.i;
+	    uint8_t* img_ptr = img->data.ptr;
+
             int sum_cols = sum->cols;
             int i, j, kk, x, y, nangle;
             float* vec;
@@ -640,6 +643,58 @@ struct PSURFInvoker
                 kp->size = -1;
                 continue;
             }
+
+	    // in case we have distance image, we try to estimate the 
+	    // normal of that point by sampling the distances around
+	    // the center point, estimate the homography, and transform
+	    // the patch accordingly before processing
+	    if( dist_img )
+	    {
+		// create image buffer 
+		imgBuf.create( img->height, img->width, img->type );
+		sumBuf.create( sum->height, sum->width, sum->type );
+
+		// estimate homography
+		stereo::Homography h;
+		if( h.estimateFromDistanceImage( *dist_img, center.x, center.y, 10 * s ) )
+		{
+		    float radius = 15 * s;
+		    cv::Mat patch; 
+
+		    // project patch onto buffer
+		    h.reproject( cv::Mat( img ), patch, center.x, center.y, radius );
+
+		    // and copy clipped region
+		    cv::Point offset = cv::Point( center.x - radius, center.y - radius ); 
+		    cv::Rect roi = cv::Rect( 0, 0, 2 * radius, 2 * radius ) + offset;
+		    roi &= cv::Rect( cv::Point( 0, 0 ), imgBuf.size() );
+
+		    cv::Mat buf_roi( imgBuf, roi );
+		    cv::Mat( patch, roi - offset ).copyTo( buf_roi );
+
+		    // calculate the sum image
+		    cv::Mat sum_roi( sumBuf, roi );
+		    cv::integral( buf_roi, sum_roi );
+
+		    /*
+		    // write patch to disk
+		    static int index = 0;
+		    std::stringstream fn;
+		    fn << "/tmp/patch" << index << ".png";
+		    imwrite( fn.str(), imgBuf );
+		    index++;
+		    */
+
+		    // redirect pointers 
+		    img_ptr = imgBuf.ptr<uint8_t>();
+		    sum_ptr = sumBuf.ptr<int>();
+		}
+		else
+		{
+		    //kp->size = -1;
+		    //continue;
+		}
+	    }
 
             float descriptor_dir = 90.f;
             if (params->upright == 0)
@@ -733,7 +788,7 @@ struct PSURFInvoker
                     {
                         int x = std::min(std::max(cvRound(pixel_x), 0), img->cols-1);
                         int y = std::min(std::max(cvRound(pixel_y), 0), img->rows-1);
-                        WIN[i*win_size + j] = img->data.ptr[y*img->step + x];
+                        WIN[i*win_size + j] = img_ptr[y*img->step + x];
                     }
                 }
             }
@@ -760,7 +815,7 @@ struct PSURFInvoker
                         y = MAX( pixel_y, 0 );
                         x = MIN( x, img->cols-1 );
                         y = MIN( y, img->rows-1 );
-                        WIN[i*win_size + j] = img->data.ptr[y*img->step+x];
+                        WIN[i*win_size + j] = img_ptr[y*img->step+x];
                     }
                 }               
             }
@@ -769,11 +824,13 @@ struct PSURFInvoker
             cvResize( &win, &_patch, CV_INTER_AREA );
 
 	    // DEBUG: write patch to disk
+	    /*
 	    static int index = 0;
 	    std::stringstream fn;
 	    fn << "/tmp/patch" << index << ".png";
 	    imwrite( fn.str(), Mat( &_patch ) );
 	    index++;
+	    */
 
             /* Calculate gradients in x and y with wavelets of size 2s */
             for( i = 0; i < PATCH_SZ; i++ )
@@ -857,10 +914,14 @@ struct PSURFInvoker
     /* Parameters */
     const CvSURFParams* params;
     const CvMat* img;
-    const CvMat* dist_img;
+    const base::samples::DistanceImage *dist_img;
     const CvMat* sum;
     CvSeq* keypoints;
     CvSeq* descriptors;
+    
+    /* image and sum buffers */
+    mutable cv::Mat imgBuf;
+    mutable cv::Mat sumBuf;
 
     /* Pre-calculated values */
     int nOriSamples;
@@ -877,7 +938,7 @@ const float PSURFInvoker::DESC_SIGMA     = 3.3f;
 
 CV_IMPL void
 cvExtractPSURF( const CvArr* _img, 
-		const CvArr* _dist_img,
+		const base::samples::DistanceImage *_dist_img,
 		const CvArr* _mask,
                CvSeq** _keypoints, CvSeq** _descriptors,
                CvMemStorage* storage, CvSURFParams params,
@@ -892,7 +953,6 @@ cvExtractPSURF( const CvArr* _img,
 
     CvSeq *keypoints, *descriptors = 0;
     CvMat imghdr, *img = cvGetMat(_img, &imghdr);
-    CvMat dist_imghdr, *dist_img = _dist_img ? cvGetMat(_dist_img, &dist_imghdr) : 0;
     CvMat maskhdr, *mask = _mask ? cvGetMat(_mask, &maskhdr) : 0;
 
     int descriptor_size = params.extended ? 128 : 64;
@@ -941,9 +1001,9 @@ cvExtractPSURF( const CvArr* _img,
     {
 #ifdef HAVE_TBB
         cv::parallel_for(cv::BlockedRange(0, N),
-                     cv::PSURFInvoker(&params, keypoints, descriptors, img, dist_img, sum) );
+                     cv::PSURFInvoker(&params, keypoints, descriptors, img, _dist_img, sum) );
 #else
-	    cv::PSURFInvoker invoker(&params, keypoints, descriptors, img, dist_img, sum);
+	    cv::PSURFInvoker invoker(&params, keypoints, descriptors, img, _dist_img, sum);
 	    invoker(cv::BlockedRange(0, N));
 #endif
     }
@@ -1026,8 +1086,7 @@ void PSURF::operator()(const Mat& img, const Mat& mask,
         pmask = &(_mask = mask);
     MemStorage storage(cvCreateMemStorage(0));
     Seq<CvSURFPoint> kp;
-    Mat _dist_img;
-    cvExtractPSURF(&_img, &_dist_img, pmask, &kp.seq, 0, storage, *(const CvSURFParams*)this, 0);
+    cvExtractPSURF(&_img, NULL, pmask, &kp.seq, 0, storage, *(const CvSURFParams*)this, 0);
     Seq<CvSURFPoint>::iterator it = kp.begin();
     size_t i, n = kp.size();
     keypoints.resize(n);
@@ -1040,15 +1099,13 @@ void PSURF::operator()(const Mat& img, const Mat& mask,
 }
 
 void PSURF::operator()(const Mat& img, 
-		const Mat& dist_img,
+		const base::samples::DistanceImage *dist_img,
 		const Mat& mask,
                 vector<KeyPoint>& keypoints,
                 vector<float>& descriptors,
                 bool useProvidedKeypoints) const
 {
-    CvMat _img = img, _dist_img, *pdist_img = 0, _mask, *pmask = 0;
-    if( dist_img.data )
-	pdist_img = &(_dist_img = dist_img);
+    CvMat _img = img, _mask, *pmask = 0;
     if( mask.data )
         pmask = &(_mask = mask);
     MemStorage storage(cvCreateMemStorage(0));
@@ -1066,7 +1123,7 @@ void PSURF::operator()(const Mat& img,
         }
     }
 
-    cvExtractPSURF(&_img, pdist_img, pmask, &kp.seq, &d, storage,
+    cvExtractPSURF(&_img, dist_img, pmask, &kp.seq, &d, storage,
         *(const CvSURFParams*)this, useProvidedKeypoints);
 
     // input keypoints can be filtered in cvExtractSURF()
@@ -1094,11 +1151,10 @@ void PSURF::operator()(const Mat& img,
 \****************************************************************************************/
 PSurfDescriptorExtractor::PSurfDescriptorExtractor( int nOctaves,
                                                   int nOctaveLayers, bool extended, bool upright )
-    : surf( 0.0, nOctaves, nOctaveLayers, extended, upright )
+    : surf( 0.0, nOctaves, nOctaveLayers, extended, upright ), dist_img( NULL )
 {}
 
-void PSurfDescriptorExtractor::compute( const Mat& image,
-					const Mat& distance_image,
+void PSurfDescriptorExtractor::computeImpl( const Mat& image,
                                            vector<KeyPoint>& keypoints,
                                            Mat& descriptors) const
 {
@@ -1109,18 +1165,11 @@ void PSurfDescriptorExtractor::compute( const Mat& image,
     Mat grayImage = image;
     if( image.type() != CV_8U ) cvtColor( image, grayImage, CV_BGR2GRAY );
 
-    surf(grayImage, distance_image, mask, keypoints, _descriptors, useProvidedKeypoints);
+    surf(grayImage, dist_img, mask, keypoints, _descriptors, useProvidedKeypoints);
 
     descriptors.create((int)keypoints.size(), (int)surf.descriptorSize(), CV_32FC1);
     assert( (int)_descriptors.size() == descriptors.rows * descriptors.cols );
     std::copy(_descriptors.begin(), _descriptors.end(), descriptors.begin<float>());
-}
-
-void PSurfDescriptorExtractor::computeImpl( const Mat& image,
-                                           vector<KeyPoint>& keypoints,
-                                           Mat& descriptors) const
-{
-    compute( image, Mat(), keypoints, descriptors );
 }
 
 void PSurfDescriptorExtractor::read( const FileNode &fn )

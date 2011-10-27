@@ -6,6 +6,7 @@
 #include <base/time.h>
 #include <base/eigen.h>
 #include <cv.h>
+#include <base/samples/distance_image.h>
 
 namespace stereo
 {
@@ -23,6 +24,16 @@ public:
      * This will also reset any previous configuration including detector type.
      */
     void setConfiguration( const FeatureConfiguration &config );
+
+    /** optionally set the distance images before each call to process frame 
+     * pair, in order to perform a perspective undistort of the features
+     * before running the descriptor.
+     * @param left - left distance image
+     * @param right - right distance image
+     */
+    void setDistanceImages( 
+	    const base::samples::DistanceImage &left, 
+	    const base::samples::DistanceImage &right );
 
     /** Perform the processing on a stereo frame pair.
      * This will perform feature detection, description, matching and filtering 
@@ -107,6 +118,8 @@ protected:
 
     cv::Mat debugImage;
     int debugRightOffset;
+
+    const base::samples::DistanceImage *dist_left, *dist_right;
 };
 
 }

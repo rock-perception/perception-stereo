@@ -14,6 +14,6 @@ link_directories(${OPENCV_LIBRARY_DIRS})
 set(CMAKE_CXX_FLAGS "-msse3")
 
 rock_library(stereo
-    SOURCES configuration.cpp densestereo.cpp sparse_stereo.cpp psurf.cpp
+    SOURCES configuration.cpp densestereo.cpp sparse_stereo.cpp psurf.cpp homography.cpp
     DEPS_PKGCONFIG opencv frame_helper libelas envire
-    HEADERS configuration.h densestereo.h dense_stereo_types.h sparse_stereo.hpp sparse_stereo_types.h)
+    HEADERS configuration.h densestereo.h dense_stereo_types.h sparse_stereo.hpp sparse_stereo_types.h homography.h)

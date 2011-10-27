@@ -20,7 +20,7 @@ namespace stereo {
  * private soon). getDistanceImage is more likely what you want to call, which
  * produces images where the actual distance is encoded as a float. Use the
  * createDistanceImage method beforehand to get the cv::Mat to pass as a
- * parameter to getDistanceImage to get the base::samples::distance_image type
+ * parameter to getDistanceImage to get the base::samples::DistanceImage type
  * filled from this class.
  */
 class DenseStereo {
@@ -68,6 +68,19 @@ public:
    */
   void getDistanceImages( const cv::Mat &left_frame, const cv::Mat &right_frame,
 			  cv::Mat &left_output_frame, cv::Mat &right_output_frame,
+			  bool isRectified = false );
+
+  /** 
+   * convenience method that takes base::samples::DistanceImages as the result objects
+   *
+   * @param left_frame left input frame
+   * @param right_frame right input frame
+   * @param left_output_frame left distance image
+   * @param right_output_frame right distance image 
+   * @param isRectified tells the function if the input images are already rectified
+   */
+  void getDistanceImages( const cv::Mat &left_frame, const cv::Mat &right_frame,
+			  base::samples::DistanceImage &left_output_frame, base::samples::DistanceImage &right_output_frame,
 			  bool isRectified = false );
 
   /** 

@@ -20,6 +20,7 @@ Eigen::Vector2d cv2eigen( const cv::Point& point )
 
 
 StereoFeatures::StereoFeatures()
+    : dist_left( NULL ), dist_right( NULL )
 {
     descriptorExtractor = new cv::PSurfDescriptorExtractor(4, 3, false);
     descriptorMatcher = cv::DescriptorMatcher::create("FlannBased");
@@ -35,6 +36,15 @@ void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
 {
     this->config = config;
     initDetector( config.targetNumFeatures );
+}
+
+
+void StereoFeatures::setDistanceImages( 
+	const base::samples::DistanceImage &left, 
+	const base::samples::DistanceImage &right )
+{
+    dist_left = &left;
+    dist_right = &right;
 }
 
 void StereoFeatures::initDetector( size_t lastNumFeatures )
@@ -153,7 +163,17 @@ void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &righ
 	calib.initCv();
     }
 
+    // this is the right time to set the distance images
+    // in the extractor if they are available, then run
+    // the findFeatures method
+    cv::PSurfDescriptorExtractor *psurf = 
+	dynamic_cast<cv::PSurfDescriptorExtractor*>( &(*descriptorExtractor) ); 
+    if( dist_left && psurf )
+	psurf->setDistanceImage( dist_left );
     findFeatures( leftImage, leftFeatures );
+
+    if( dist_right && psurf ) 
+	psurf->setDistanceImage( dist_right );
     findFeatures( rightImage, rightFeatures );
 
     if( config.adaptiveDetectorParam )
