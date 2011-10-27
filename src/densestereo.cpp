@@ -170,6 +170,17 @@ void DenseStereo::getDistanceImages( const cv::Mat &left_frame, const cv::Mat &r
     getDistanceImages( left_output_frame, right_output_frame );
 }
 
+void DenseStereo::getDistanceImages( const cv::Mat &left_frame, const cv::Mat &right_frame,
+	base::samples::DistanceImage &left_output_frame, base::samples::DistanceImage &right_output_frame,
+	bool isRectified )
+{
+    cv::Mat 
+	cleft = createLeftDistanceImage( left_output_frame ),
+	cright = createRightDistanceImage( right_output_frame );
+
+    getDistanceImages( left_frame, right_frame, cleft, cright, isRectified );
+}
+
 cv::Mat DenseStereo::createDistanceImage( 
 	frame_helper::CameraCalibrationCv const& calibcv, base::samples::DistanceImage& distanceFrame )
 {
