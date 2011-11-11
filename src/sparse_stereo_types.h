@@ -170,6 +170,27 @@ struct StereoFeatureArray
 	fc.descriptorType = descriptorType;
 	fc.descriptorSize = descriptorSize;
     }
+
+    /** 
+     * copy to a featurecloud, but only up to a maximum distance
+     */
+    void copyTo( envire::Featurecloud& fc, double max_dist ) const
+    {
+	fc.clear();
+	fc.descriptorType = descriptorType;
+	fc.descriptorSize = descriptorSize;
+
+	for( size_t i=0; i<points.size(); i++ )
+	{
+	    if( points[i].norm() < max_dist )
+	    {
+		fc.vertices.push_back( points[i] );
+		fc.keypoints.push_back( keypoints[i] );
+		std::vector<float>::const_iterator d = descriptors.begin() + descriptorSize * i;
+		std::copy( d, d + descriptorSize, std::back_inserter( fc.descriptors ) );
+	    }
+	}
+    }
 };
 }
 
