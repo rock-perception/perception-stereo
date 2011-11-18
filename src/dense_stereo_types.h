@@ -8,6 +8,8 @@ namespace stereo {
   /** Configuration parameters for lib elas.*/
   struct libElasConfiguration
   {
+    libElasConfiguration();
+
     int32_t disp_min;               // min disparity
     int32_t disp_max;               // max disparity
     float   support_threshold;      // max. uniqueness ratio (best vs. second best support match)

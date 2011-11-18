@@ -5,18 +5,8 @@
 #include "dense_stereo_types.h"
 
 namespace stereo {
-
-class Configuration {
-public:
-	Configuration();
-	virtual ~Configuration();
-
-	/** load precalculated default parameters */
-	static void loadLibElasDefaultParameters(Elas::parameters &elasParam);
-	
-	/// load libelas configuration
-	static void loadLibElasConfiguration(const libElasConfiguration &libElasParam, Elas::parameters &elasParam);
-};
+    void copyFromElas( const Elas::parameters *params, libElasConfiguration *config );
+    void copyToElas( const libElasConfiguration *config, Elas::parameters *params );
 }
 
 #endif /* DENSE_STEREO_CONFIGURATION_H_ */
