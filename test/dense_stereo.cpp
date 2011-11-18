@@ -2,12 +2,13 @@
 #include <stereo/densestereo.h>
 
 #include "opencv2/highgui/highgui.hpp"
+#include <boost/lexical_cast.hpp>
 
 int main( int argc, char* argv[] )
 {
     if( argc < 5 )
     {
-	std::cout << "usage: dense_stereo leftimage rightimage calibration_file result" << std::endl;
+	std::cout << "usage: dense_stereo leftimage rightimage calibration_file result <gaussian_blur>" << std::endl;
 	exit(0);
     }
 
@@ -16,6 +17,10 @@ int main( int argc, char* argv[] )
 
     std::string prefix_out = argv[4];
 
+    int gaussian_kernel = 0;
+    if( argc > 5 )
+	gaussian_kernel = boost::lexical_cast<int>( argv[5] );
+
     assert( cleft.size() == cright.size() );
 
     frame_helper::StereoCalibrationCv calib;
@@ -23,15 +28,11 @@ int main( int argc, char* argv[] )
     calib.setImageSize( cleft.size() );
     calib.initCv();
 
-    // prefilter images
-    cv::GaussianBlur( cleft, cleft, cv::Size( 9, 9 ), 0 );
-    cv::GaussianBlur( cright, cright, cv::Size( 9, 9 ), 0 );
-
-    cv::imwrite( prefix_out + "cleft.png", cleft );
-    cv::imwrite( prefix_out + "cright.png", cright );
-    
     // setup dense stereo object
     stereo::DenseStereo dense;
+
+    if( gaussian_kernel )
+	dense.setGaussianKernel( gaussian_kernel );
 
     // update calibration
     dense.setStereoCalibration( calib.getCalibration(), cleft.size().width, cleft.size().height );

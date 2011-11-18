@@ -41,6 +41,13 @@ public:
    * @param libElasParam libElas configuration
    */
   void setLibElasConfiguration(const libElasConfiguration &libElasParam);
+
+  /** 
+   * if set to greater than 0, the images will be preprocessed with a 
+   * gaussian blur filter with a kernel of the given size. Should be
+   * an odd number.
+   */
+  void setGaussianKernel( int size ) { gaussian_kernel = size; }
   
   /** computes disparities of input frame pair left_frame, right_frame 
    * @param left_frame left input frame
@@ -118,6 +125,9 @@ public:
 			  
   
 private:
+  /// see if we need to apply a gaussian filter
+  int gaussian_kernel;
+
   ///instance of libElas
   Elas *elas;
   
