@@ -75,7 +75,15 @@ void DenseStereo::cvtCvMatToGrayscaleImage(cv::Mat &image) {
     default:
       throw std::runtime_error("Unknown format. Cannot convert cv::Mat to grayscale.");
   }
-  image = newImage;
+  
+  if( gaussian_kernel > 0 )
+  {
+    cv::GaussianBlur( newImage, image, cv::Size( gaussian_kernel, gaussian_kernel ), 0 );
+  }
+  else
+  {
+    image = newImage;
+  }
 }
 
 // computes disparities of image input pair left_frame, right_frame
