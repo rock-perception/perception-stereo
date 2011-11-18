@@ -6,6 +6,10 @@ rock_testsuite(undistort
     undistort.cpp
     DEPS stereo)
 
+rock_testsuite(dense_stereo
+    dense_stereo.cpp
+    DEPS stereo)
+
 if( envire_FOUND AND vizkit_FOUND )
 rock_testsuite(test_stereo-viz
     viz.cpp
