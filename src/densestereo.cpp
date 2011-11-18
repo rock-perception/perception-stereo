@@ -7,11 +7,13 @@ using namespace std;
 namespace stereo {
 
 // wrapper class to hide libelas from orocos
-DenseStereo::DenseStereo() {
-  calibrationInitialized = false;
+DenseStereo::DenseStereo() 
+    : gaussian_kernel(0), calibrationInitialized( false )
+{
   // configure Elas and instantiate it
   Elas::parameters elasParam;
-  Configuration::loadLibElasDefaultParameters(elasParam);
+  libElasConfiguration config;
+  copyToElas( &config, &elasParam );
   elas = new Elas(elasParam);
 }
 
@@ -32,9 +34,11 @@ void DenseStereo::setStereoCalibration(const frame_helper::StereoCalibration& st
 void DenseStereo::setLibElasConfiguration(const libElasConfiguration &libElasParam){
   //delete default configured libelas
   delete elas;
+
   //configure Elas and instantiate it
   Elas::parameters elasParam;
-  Configuration::loadLibElasConfiguration(libElasParam, elasParam);
+  copyToElas( &libElasParam, &elasParam );
+
   elas = new Elas(elasParam);
 }
 

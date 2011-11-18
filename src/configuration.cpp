@@ -2,34 +2,58 @@
 
 namespace stereo {
 
-void Configuration::loadLibElasDefaultParameters(Elas::parameters &elasParam){
-  elasParam.postprocess_only_left = false;
+void copyFromElas( const Elas::parameters *params, libElasConfiguration *config )
+{
+    config->disp_min = params->disp_min;
+    config->disp_max = params->disp_max;
+    config->support_threshold = params->support_threshold;
+    config->support_texture = params->support_texture;
+    config->candidate_stepsize = params->candidate_stepsize;
+    config->incon_window_size = params->incon_window_size;
+    config->incon_threshold = params->incon_threshold;
+    config->incon_min_support = params->incon_min_support;
+    config->add_corners = params->add_corners;
+    config->grid_size = params->grid_size;
+    config->beta = params->beta;
+    config->gamma = params->gamma;
+    config->sigma = params->sigma;
+    config->sradius = params->sradius;
+    config->match_texture = params->match_texture;
+    config->lr_threshold = params->lr_threshold;
+    config->speckle_sim_threshold = params->speckle_sim_threshold;
+    config->speckle_size = params->speckle_size;
+    config->ipol_gap_width = params->ipol_gap_width;
+    config->filter_median = params->filter_median;
+    config->filter_adaptive_mean = params->filter_adaptive_mean;
+    config->postprocess_only_left = params->postprocess_only_left;
+    config->subsampling = params->subsampling;
 }
 
-void Configuration::loadLibElasConfiguration(const libElasConfiguration &libElasParam, Elas::parameters &elasParam){
-  //TODO better copying between structs
-  elasParam.disp_min = libElasParam.disp_min;
-  elasParam.disp_max = libElasParam.disp_max;
-  elasParam.support_threshold = libElasParam.support_threshold;
-  elasParam.support_texture = libElasParam.support_texture;
-  elasParam.candidate_stepsize = libElasParam.candidate_stepsize;
-  elasParam.incon_window_size = libElasParam.incon_window_size;
-  elasParam.incon_threshold = libElasParam.incon_threshold;
-  elasParam.incon_min_support = libElasParam.incon_min_support;
-  elasParam.add_corners = libElasParam.add_corners;
-  elasParam.grid_size = libElasParam.grid_size;
-  elasParam.beta = libElasParam.beta;
-  elasParam.gamma = libElasParam.gamma;
-  elasParam.sigma = libElasParam.sigma;
-  elasParam.sradius = libElasParam.sradius;
-  elasParam.match_texture = libElasParam.match_texture;
-  elasParam.lr_threshold = libElasParam.lr_threshold;
-  elasParam.speckle_sim_threshold = libElasParam.speckle_sim_threshold;
-  elasParam.speckle_size = libElasParam.speckle_size;
-  elasParam.ipol_gap_width = libElasParam.ipol_gap_width;
-  elasParam.filter_median = libElasParam.filter_median;
-  elasParam.filter_adaptive_mean = libElasParam.filter_adaptive_mean;
-  elasParam.postprocess_only_left = libElasParam.postprocess_only_left;
-  elasParam.subsampling = libElasParam.subsampling;
+void copyToElas( const libElasConfiguration *config, Elas::parameters *params )
+{
+    params->disp_min = config->disp_min;
+    params->disp_max = config->disp_max;
+    params->support_threshold = config->support_threshold;
+    params->support_texture = config->support_texture;
+    params->candidate_stepsize = config->candidate_stepsize;
+    params->incon_window_size = config->incon_window_size;
+    params->incon_threshold = config->incon_threshold;
+    params->incon_min_support = config->incon_min_support;
+    params->add_corners = config->add_corners;
+    params->grid_size = config->grid_size;
+    params->beta = config->beta;
+    params->gamma = config->gamma;
+    params->sigma = config->sigma;
+    params->sradius = config->sradius;
+    params->match_texture = config->match_texture;
+    params->lr_threshold = config->lr_threshold;
+    params->speckle_sim_threshold = config->speckle_sim_threshold;
+    params->speckle_size = config->speckle_size;
+    params->ipol_gap_width = config->ipol_gap_width;
+    params->filter_median = config->filter_median;
+    params->filter_adaptive_mean = config->filter_adaptive_mean;
+    params->postprocess_only_left = config->postprocess_only_left;
+    params->subsampling = config->subsampling;
 }
+
 }
