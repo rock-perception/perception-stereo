@@ -57,6 +57,7 @@ struct FeatureConfiguration
 	  isometryFilterMaxSteps( 1000 ),
 	  isometryFilterThreshold( 0.1 ),
 	  adaptiveDetectorParam( false ),
+	  descriptorType( envire::DESCRIPTOR_SURF ),
 	  detectorType( DETECTOR_SURF ),
 	  filterType( FILTER_STEREO )
     {}
@@ -102,6 +103,7 @@ struct FeatureConfiguration
     bool adaptiveDetectorParam;
     DetectorConfiguration detectorConfig;
 
+    envire::DESCRIPTOR descriptorType;
     DETECTOR detectorType;
     FILTER filterType;
 };

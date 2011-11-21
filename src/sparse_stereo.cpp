@@ -22,9 +22,9 @@ Eigen::Vector2d cv2eigen( const cv::Point& point )
 StereoFeatures::StereoFeatures()
     : dist_left( NULL ), dist_right( NULL )
 {
-    descriptorExtractor = new cv::PSurfDescriptorExtractor(4, 3, false);
     descriptorMatcher = cv::DescriptorMatcher::create("FlannBased");
     initDetector( config.targetNumFeatures );
+    setConfiguration( FeatureConfiguration() );
 }
 
 void StereoFeatures::setCalibration( const frame_helper::StereoCalibration &calib )
@@ -36,8 +36,14 @@ void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
 {
     this->config = config;
     initDetector( config.targetNumFeatures );
-}
 
+    if( config.descriptorType == envire::DESCRIPTOR_SURF )
+	descriptorExtractor = new cv::SurfDescriptorExtractor(4, 3, false);
+    else if( config.descriptorType == envire::DESCRIPTOR_PSURF )
+	descriptorExtractor = new cv::PSurfDescriptorExtractor(4, 3, false);
+    else
+	throw std::runtime_error( "Unknown descriptorType" );
+}
 
 void StereoFeatures::setDistanceImages( 
 	const base::samples::DistanceImage &left, 
