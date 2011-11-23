@@ -221,7 +221,7 @@ cv::Mat DenseStereo::createDistanceImage(
     distanceFrame.center_y = -calib.cy / calib.fy; 
 
     // wrap the data member of the distanceImage into a cv::Mat
-    cv::Mat result( width, height, cv::DataType<float>::type,
+    cv::Mat result( height, width, cv::DataType<float>::type,
 	    reinterpret_cast<uint8_t *>( &distanceFrame.data[0] ) );
 
     return result;
