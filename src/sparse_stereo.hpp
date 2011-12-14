@@ -101,7 +101,7 @@ protected:
     void initDetector( size_t lastNumFeatures );
     void findFeatures( const cv::Mat &image, FeatureInfo& info, bool left_frame = true );
 
-    void crossCheckMatching( std::vector<std::vector<cv::DMatch> > matches12, std::vector<std::vector<cv::DMatch> > matches21, std::vector<cv::DMatch>& filteredMatches12, float distanceFactor = 2.0);
+    void crossCheckMatching( std::vector<std::vector<cv::DMatch> > matches12, std::vector<std::vector<cv::DMatch> > matches21, std::vector<cv::DMatch>& filteredMatches12, int knn = 1, float distanceFactor = 2.0);
 
     frame_helper::StereoCalibrationCv calib;
     FeatureConfiguration config;
