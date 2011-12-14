@@ -6,7 +6,115 @@
 #include <stereo/densestereo.h>
 #include <stereo/homography.h>
 
+#include <vizkit/QtThreadedWidget.hpp>
+#include <vizkit/QVisualizationTestWidget.hpp>
+#include <vizkit/DistanceImageVisualization.hpp>
+#include <iostream>
+#include "opencv2/opencv.hpp"
 #include "opencv2/highgui/highgui.hpp"
+
+
+BOOST_AUTO_TEST_CASE( sparse_test ) 
+{
+    std::cout << "Testing Sparse Stereo functionality" << std::endl;
+
+    const size_t width = 640, height = 480;
+
+    cv::Mat leftImage(cv::Size(width, height),CV_8UC1);
+    cv::Mat rightImage(cv::Size(width, height),CV_8UC1);
+    cv::Mat transformation;
+    stereo::FeatureConfiguration configuration;
+    frame_helper::StereoCalibration calib;
+
+    // create canconical calibration matrices for the two virtual cameras with a 100mm stereo setup 
+    calib.camLeft.fx = calib.camLeft.fy = 200.0;
+    calib.camLeft.d0 = calib.camLeft.d1 = calib.camLeft.d2 = calib.camLeft.d3 = 0.0;
+    calib.camLeft.cx = width / 2;
+    calib.camLeft.cy = height / 2;
+
+    calib.camRight.fx = calib.camRight.fy = 200.0;
+    calib.camRight.d0 = calib.camRight.d1 = calib.camRight.d2 = calib.camRight.d3 = 0.0;
+    calib.camRight.cx = width / 2;
+    calib.camRight.cy = height / 2;
+
+    calib.extrinsic.tx = 100;
+    calib.extrinsic.ty = calib.extrinsic.tz = 0;
+    calib.extrinsic.rx = calib.extrinsic.ry = calib.extrinsic.rz = 0.0;
+
+    // create data on left image. Data will be some rectangles as well as 100 randomly drawn circles of differing size and fill all over the image
+    // add some filled rectangles
+    for(int i = 0; i < 40; ++i)
+    {
+      cv::Point p1 = cv::Point(std::rand() % (width - 20), std::rand() % (width - 20));
+      cv::rectangle(leftImage, p1, cv::Point(p1.x + std::rand() % 70, p1.y + std::rand() % 50), cv::Scalar(std::rand() % 128 + 128), -1);
+    }
+    // now the circles
+    for(int i = 0; i < 100; ++i)
+    {
+      cv::circle(leftImage, cv::Point(std::rand() % (width - 20) + 10, std::rand() % (width - 20) + 10), std::rand() % 10, cv::Scalar(std::rand() % 128 + 128), std::rand() % 4);
+    }
+    // now transform that data by +50/0 pixels and 0° into the right image for matching
+    double angle = 0.0 / 180.0 * M_PI;
+    transformation = (cv::Mat_<double>(2,3) << cos(angle), -sin(angle), 50, sin(angle), cos(angle), 0);
+    cv::warpAffine(leftImage, rightImage, transformation, cv::Size(width, height));
+
+    // conversion from the enum DESCRIPTOR_TYPE to text
+    std::vector<std::string> detector_types;
+    detector_types.push_back("SURF");
+    detector_types.push_back("GOOD");
+    detector_types.push_back("SURFGPU");
+    detector_types.push_back("STAR");
+    detector_types.push_back("MSER");
+    detector_types.push_back("SIFT");
+    detector_types.push_back("FAST");
+    detector_types.push_back("SURF_CV_GPU");
+
+    // create the feature class
+    stereo::StereoFeatures *features = new stereo::StereoFeatures();
+ 
+    // check if there is GPU support on the machine
+    int cuda_devices = cv::gpu::getCudaEnabledDeviceCount();
+    std::cout << "Number of CUDA-enabled devices: " << cuda_devices << std::endl;
+    if(cuda_devices < 1)
+    {
+      std::cout << "Skipping GPU tests, no suitable CUDA devices present." << std::endl;
+    }
+    else
+    {
+      // initialize the GPU
+      cv::gpu::setDevice(0);
+    }
+
+    configuration.detectorType = stereo::DETECTOR_SURF; 
+    for(int i = 0; i < 8; ++i)
+    {
+      // skip the GPU tests if there is no GPU
+      if(cuda_devices < 1 && (i == 2 || i == 7))
+        continue;
+      char buf[200];
+      std::cout << "Testing " << detector_types[i] << " Detector...";
+      features->setConfiguration(configuration);
+      features->setCalibration(calib);
+      clock_t start = clock();
+      features->processFramePair(leftImage, rightImage);
+      clock_t finish = clock();
+      double lResult = (double)(finish - start) / (double)(CLOCKS_PER_SEC / 1000);
+      stereo::StereoFeatureArray stereo_features = features->getStereoFeatures();
+      // determine the number of features. If none were detected, there is a problem.
+      std::cout << " Number of features: " << stereo_features.keypoints.size() << " in " << lResult << "ms. ";
+      if(stereo_features.keypoints.size() > 0)
+        std::cout << " Success!" << std::endl;
+      else
+        std::cout << " Failed!" << std::endl;
+      // save debug image
+      sprintf(buf, "out_%s.png", detector_types[i].data());
+      cv::imwrite(buf, features->getDebugImage());
+      // increase the detector type
+      configuration.detectorType = (stereo::DETECTOR)(configuration.detectorType + 1);
+    }
+    std::cout << "Finished all Sparse Stereo tests." << std::endl << std::endl;
+}
+
 
 const std::string prefix = "test/";
 const std::string prefix_out = "build/test/";
