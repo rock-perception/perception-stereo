@@ -35,7 +35,7 @@ void StereoFeatures::setCalibration( const frame_helper::StereoCalibration &cali
 
 void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
 {
-    this->config = conf;
+    this->config = config;
     initDetector( config.targetNumFeatures );
 
     if( config.descriptorType == envire::DESCRIPTOR_SURF )
@@ -202,7 +202,10 @@ void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat 
     stereoFeatures.clear();
     findFeatures( left_image, right_image );
     if(!getPutativeStereoCorrespondences())
+    {
+      std::cout << "stereo::getPutativeStereoCorrespondences: returned false." << std::endl;
       return;
+    }
     refineFeatureCorrespondences();
     calculateDepthInformationBetweenCorrespondences();
 }
@@ -285,10 +288,10 @@ void StereoFeatures::crossCheckMatching( const cv::Mat& descriptors1, const cv::
   std::vector<std::vector<cv::DMatch> > matches12, matches21;
   descriptorMatcher->knnMatch( descriptors1, descriptors2, matches12, knn );
   descriptorMatcher->knnMatch( descriptors2, descriptors1, matches21, knn );
-  crossCheckMatching(matches12, matches21, filteredMatches12, distanceFactor);
+  crossCheckMatching(matches12, matches21, filteredMatches12, knn, distanceFactor);
 }
 
-void StereoFeatures::crossCheckMatching( std::vector<std::vector<cv::DMatch> > matches12, std::vector<std::vector<cv::DMatch> > matches21, std::vector<cv::DMatch>& filteredMatches12, float distanceFactor)
+void StereoFeatures::crossCheckMatching( std::vector<std::vector<cv::DMatch> > matches12, std::vector<std::vector<cv::DMatch> > matches21, std::vector<cv::DMatch>& filteredMatches12, int knn, float distanceFactor)
 {
     filteredMatches12.clear();
     for( size_t m = 0; m < matches12.size(); m++ )
@@ -313,12 +316,12 @@ void StereoFeatures::crossCheckMatching( std::vector<std::vector<cv::DMatch> > m
 		}
 	    }
 	}
-
     }
 }
 
 bool StereoFeatures::getPutativeStereoCorrespondences()
 {
+    std::vector<cv::DMatch> stereoCorrespondences;
     if(leftFeatures.descriptors.rows < 5 || rightFeatures.descriptors.rows < 5)
     {
 	std::cerr << "GetPutativeStereoCorrespondences_Descriptor: At least 5 features are needed left and right, currently " <<
@@ -525,7 +528,7 @@ bool StereoFeatures::refineFeatureCorrespondences()
 	}
     }
 
-    //cout << "Number of refined stereo matches: " << counter << endl;
+//    std::cout << "Number of refined stereo matches: " << counter << std::endl;
     return !runDefault;
 }
 

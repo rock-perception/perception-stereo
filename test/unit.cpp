@@ -53,9 +53,9 @@ BOOST_AUTO_TEST_CASE( sparse_test )
     {
       cv::circle(leftImage, cv::Point(std::rand() % (width - 20) + 10, std::rand() % (width - 20) + 10), std::rand() % 10, cv::Scalar(std::rand() % 128 + 128), std::rand() % 4);
     }
-    // now transform that data by +50/0 pixels and 0° into the right image for matching
+    // now transform that data by -50/0 pixels and 0° into the right image for matching
     double angle = 0.0 / 180.0 * M_PI;
-    transformation = (cv::Mat_<double>(2,3) << cos(angle), -sin(angle), 50, sin(angle), cos(angle), 0);
+    transformation = (cv::Mat_<double>(2,3) << cos(angle), -sin(angle), -50, sin(angle), cos(angle), 0);
     cv::warpAffine(leftImage, rightImage, transformation, cv::Size(width, height));
 
     // conversion from the enum DESCRIPTOR_TYPE to text
