@@ -34,7 +34,7 @@ void StereoFeatures::setCalibration( const frame_helper::StereoCalibration &cali
 
 void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
 {
-    this->config = config;
+    this->config = conf;
     initDetector( config.targetNumFeatures );
 
     if( config.descriptorType == envire::DESCRIPTOR_SURF )
