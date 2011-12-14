@@ -6,9 +6,6 @@
 #include <stereo/densestereo.h>
 #include <stereo/homography.h>
 
-#include <vizkit/QtThreadedWidget.hpp>
-#include <vizkit/QVisualizationTestWidget.hpp>
-#include <vizkit/DistanceImageVisualization.hpp>
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui/highgui.hpp"
