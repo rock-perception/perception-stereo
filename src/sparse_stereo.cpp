@@ -25,6 +25,7 @@ StereoFeatures::StereoFeatures()
     descriptorMatcher = cv::DescriptorMatcher::create("FlannBased");
     initDetector( config.targetNumFeatures );
     setConfiguration( FeatureConfiguration() );
+    use_gpu_detector = false;
 }
 
 void StereoFeatures::setCalibration( const frame_helper::StereoCalibration &calib )
@@ -58,13 +59,15 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
     DETECTOR detectorType = config.detectorType;
     size_t localLastNumFeatures = lastNumFeatures;
     size_t targetNumFeatures = config.targetNumFeatures;
-
     switch(detectorType)
     {
 	case DETECTOR_SURFGPU:
 	    {
 		// TODO subclass opencv detector interface for surfgpu
 		// return surfgpu(leftImage, rightImage, lastNumFeatures, targetNumFeatures);
+                config.detectorType = DETECTOR_SURF;
+                std::cout << "StereoFeatures::initDetector: Warning: DETECTOR_SURFGPU was selected, which is currently not implemented. Automatically switching to DETECTOR_SURF." << std::endl;
+                initDetector(lastNumFeatures);
 	    }
 	    break;
 	case DETECTOR_SURF:
@@ -111,7 +114,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		float &mserParam = detectorParams.mserParam;
 		mserParam += (localLastNumFeatures - targetNumFeatures) / 100.0;
 		// int delta, int minArea, int maxArea, float maxVariation, float minDiversity, int maxEvolution, double areaThreshold, double minMargin, int edgeBlurSize 
-		detector = new cv::MserFeatureDetector(mserParam, 5, 500, 1.0, 0.5, 1, 1.0, 0.0, 1);
+		detector = new cv::MserFeatureDetector(mserParam * 10.0, 5, 500, 1.0, 0.5, 1, 1.0, 0.0, 1);
 	    }
 	    break;
 	case DETECTOR_STAR:
@@ -130,30 +133,76 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::FastFeatureDetector(fastParam);
 	    }
 	    break;
+        case DETECTOR_SURF_CV_GPU:
+            {
+                use_gpu_detector = true;
+            }
+            break;
 	default: 
 	    throw std::runtime_error("Selected feature detector is not implemented.");
     }
 }
 
-void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info )
+void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool left_frame )
 {
     clock_t start, finish;
 
-    start = clock();
-    detector->detect( image, info.keypoints);
-    finish = clock();
-    info.detectorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
+    if(!use_gpu_detector)
+    {
+        start = clock();
+        detector->detect( image, info.keypoints);
+        finish = clock();
+        info.detectorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
 
-    start = clock();
-    descriptorExtractor->compute( image, info.keypoints, info.descriptors );
-    finish = clock();
-    info.descriptorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
+        start = clock();
+        descriptorExtractor->compute( image, info.keypoints, info.descriptors );
+        finish = clock();
+        info.descriptorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
+    }
+    else
+    {
+        // the structure for the GPU detector is a bit different, so handle it separately
+        try
+        {
+            cv::gpu::SURF_GPU surf(detectorParams.SURFparam, 4, 3, true);
+            // size of a sincle descriptor. 128 if exteded == true, 64 if extended == false
+            int desc_size = 128;
+            // in descriptors_gpu we carry a pointer to the respective descriptors_gpu_[left:right] structure on the GPU. This is needed later for descriptor matching on the GPU.
+            cv::gpu::GpuMat *descriptors_gpu = &descriptors_gpu_left;
+            cv::gpu::GpuMat keypoints_gpu;
+            cv::gpu::GpuMat gpu_image(image);
+            if(!left_frame)
+                descriptors_gpu = &descriptors_gpu_right;
+            // calculate the surf detector/descriptor pair
+            surf(gpu_image, cv::gpu::GpuMat(), keypoints_gpu, *descriptors_gpu);
+            // download keypoints
+            surf.downloadKeypoints(keypoints_gpu, info.keypoints);
+            // download descriptors to temporary variables
+            std::vector<float> descriptor;
+            surf.downloadDescriptors(*descriptors_gpu, descriptor);
+            // copy the descriptors to the matrix space in the global structure
+            info.descriptors = cv::Mat(0, desc_size, CV_32F, 1);
+            for(int i = 0; i < (int)info.keypoints.size(); ++i)
+            {
+                cv::Mat row(1, desc_size, CV_32F, &(descriptor[i * desc_size]), 1);
+                info.descriptors.push_back(row);
+            }
+        }
+        catch(...)
+        {
+            std::cout << "FindFeatures (Warn): detectorType == DETECTOR_SURF_CV_GPU was selected, but opencv was not build with CUDA support Switching to CPU-SURF (detectorType == DETECTOR_SURF). Please Re-Build opencv with CUDA enabled to use DETECTOR_SURF_CV_GPU." << std::endl;
+            use_gpu_detector = false;
+            findFeatures( image, info );
+        }
+    }
 }
 
 void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat &right_image )
 {
+    stereoFeatures.clear();
     findFeatures( left_image, right_image );
-    getPutativeStereoCorrespondences();
+    if(!getPutativeStereoCorrespondences())
+      return;
     refineFeatureCorrespondences();
     calculateDepthInformationBetweenCorrespondences();
 }
@@ -176,11 +225,11 @@ void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &righ
 	dynamic_cast<cv::PSurfDescriptorExtractor*>( &(*descriptorExtractor) ); 
     if( dist_left && psurf )
 	psurf->setDistanceImage( dist_left );
-    findFeatures( leftImage, leftFeatures );
+    findFeatures( leftImage, leftFeatures, true );
 
     if( dist_right && psurf ) 
 	psurf->setDistanceImage( dist_right );
-    findFeatures( rightImage, rightFeatures );
+    findFeatures( rightImage, rightFeatures, false );
 
     if( config.adaptiveDetectorParam )
     {
@@ -233,12 +282,15 @@ bool robustMatch( std::vector<cv::DMatch>& matches, float distanceFactor = 2.0 )
  */
 void StereoFeatures::crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, std::vector<cv::DMatch>& filteredMatches12, int knn, float distanceFactor )
 {
+  std::vector<std::vector<cv::DMatch> > matches12, matches21;
+  descriptorMatcher->knnMatch( descriptors1, descriptors2, matches12, knn );
+  descriptorMatcher->knnMatch( descriptors2, descriptors1, matches21, knn );
+  crossCheckMatching(matches12, matches21, filteredMatches12, distanceFactor);
+}
+
+void StereoFeatures::crossCheckMatching( std::vector<std::vector<cv::DMatch> > matches12, std::vector<std::vector<cv::DMatch> > matches21, std::vector<cv::DMatch>& filteredMatches12, float distanceFactor)
+{
     filteredMatches12.clear();
-
-    std::vector<std::vector<cv::DMatch> > matches12, matches21;
-    descriptorMatcher->knnMatch( descriptors1, descriptors2, matches12, knn );
-    descriptorMatcher->knnMatch( descriptors2, descriptors1, matches21, knn );
-
     for( size_t m = 0; m < matches12.size(); m++ )
     {
 	if( knn > 1 && !robustMatch( matches12[m], distanceFactor ) )
@@ -276,10 +328,30 @@ bool StereoFeatures::getPutativeStereoCorrespondences()
         return false;
     }
 
-    std::vector<cv::DMatch> stereoCorrespondences;
-    // do good cross check matching
-    crossCheckMatching( leftFeatures.descriptors, rightFeatures.descriptors, 
-	    stereoCorrespondences, config.knn, config.distanceFactor );
+    // check if the matching should be done on the GPU
+    if(use_gpu_detector)
+    {
+            // do stereo feature matching on the GPU.
+            cv::gpu::BruteForceMatcher_GPU< cv::L2<float> > gpu_matcher;
+            cv::gpu::GpuMat trainIdx, distance, all_dist;
+            // do matching on the GPU
+            gpu_matcher.knnMatch(descriptors_gpu_left, descriptors_gpu_right, trainIdx, distance, all_dist, 1);
+            // download the matches
+            std::vector<std::vector<cv::DMatch> > matches12;
+            cv::gpu::BruteForceMatcher_GPU< cv::L2<float> >::knnMatchDownload(trainIdx, distance, matches12);
+            cv::gpu::GpuMat trainIdx2, distance2, all_dist2;
+            gpu_matcher.knnMatch(descriptors_gpu_right, descriptors_gpu_left, trainIdx2, distance2, all_dist2, 1);
+            // download the matches
+            std::vector<std::vector<cv::DMatch> >matches21;
+            cv::gpu::BruteForceMatcher_GPU< cv::L2<float> >::knnMatchDownload(trainIdx2, distance2, matches21);
+            // use the gpu generated data for a cross check match
+            crossCheckMatching(matches12, matches21, stereoCorrespondences, config.knn, config.distanceFactor);
+    }
+    else 
+    {
+        // do good cross check matching
+        crossCheckMatching( leftFeatures.descriptors, rightFeatures.descriptors, stereoCorrespondences, config.knn, config.distanceFactor);
+    }
 
     // resize the descriptor matrices
     leftPutativeMatches.descriptors.create( stereoCorrespondences.size(),

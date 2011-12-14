@@ -17,6 +17,7 @@ enum DETECTOR
     DETECTOR_MSER = 5,
     DETECTOR_SIFT = 6,
     DETECTOR_FAST = 7,
+    DETECTOR_SURF_CV_GPU = 8,
 };
 
 enum FILTER

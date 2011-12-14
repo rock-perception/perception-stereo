@@ -7,6 +7,7 @@
 #include <base/eigen.h>
 #include <cv.h>
 #include <base/samples/distance_image.h>
+#include "opencv2/gpu/gpu.hpp"
 
 namespace stereo
 {
@@ -98,7 +99,9 @@ protected:
     };
 
     void initDetector( size_t lastNumFeatures );
-    void findFeatures( const cv::Mat &image, FeatureInfo& info );
+    void findFeatures( const cv::Mat &image, FeatureInfo& info, bool left_frame = true );
+
+    void crossCheckMatching( std::vector<std::vector<cv::DMatch> > matches12, std::vector<std::vector<cv::DMatch> > matches21, std::vector<cv::DMatch>& filteredMatches12, float distanceFactor = 2.0);
 
     frame_helper::StereoCalibrationCv calib;
     FeatureConfiguration config;
@@ -118,8 +121,10 @@ protected:
 
     cv::Mat debugImage;
     int debugRightOffset;
-
     const base::samples::DistanceImage *dist_left, *dist_right;
+    bool use_gpu_detector;
+    cv::gpu::GpuMat descriptors_gpu_left;
+    cv::gpu::GpuMat descriptors_gpu_right;
 };
 
 }
