@@ -1,7 +1,7 @@
 #ifndef stereo_DistanceImageVisualization_H
 #define stereo_DistanceImageVisualization_H
 
-#include <vizkit/VizPlugin.hpp>
+#include <vizkit/Vizkit3DPlugin.hpp>
 #include <vizkit/EnvireVisualization.hpp>
 #include <base/samples/distance_image.h>
 
@@ -22,12 +22,20 @@ namespace vizkit
 	, public VizPluginAddType<base::samples::DistanceImage>
         , boost::noncopyable
     {
+	Q_OBJECT
+
     public:
         DistanceImageVisualization();
         ~DistanceImageVisualization();
+	
+	Q_INVOKABLE void updateData(const base::samples::DistanceImage& data) 
+	{ Vizkit3DPlugin<envire::Environment*>::updateData(data); }
+
+	Q_INVOKABLE void updateDistanceImage(const base::samples::DistanceImage& data) 
+	{ Vizkit3DPlugin<envire::Environment*>::updateData(data); }
 
     protected:
-        virtual void updateDataIntern(base::samples::DistanceImage const& plan);
+        virtual void updateDataIntern(base::samples::DistanceImage const& data);
 
     private:
 	boost::scoped_ptr<envire::Environment> m_env;

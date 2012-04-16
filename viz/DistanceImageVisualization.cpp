@@ -30,7 +30,7 @@ DistanceImageVisualization::DistanceImageVisualization()
     m_env->addOutput( m_diop, m_pc );
 
     // set the environment for the plugin
-    updateData( m_env.get() );
+    EnvireVisualization::updateData( m_env.get() );
 }
 
 DistanceImageVisualization::~DistanceImageVisualization()
