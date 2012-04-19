@@ -18,7 +18,7 @@ namespace envire
 namespace vizkit
 {
     class DistanceImageVisualization
-        : public EnvireVisualization
+        : public envire::EnvireVisualization
 	, public VizPluginAddType<base::samples::DistanceImage>
         , boost::noncopyable
     {
