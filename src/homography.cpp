@@ -35,6 +35,10 @@ bool Homography::estimateFromDistanceImage( const base::samples::DistanceImage &
 	return false;
     }
 
+    // ratio between smallest and second smalles eigenvector
+    double eigen_ratio = 1.0;
+    double view_angle = M_PI/2.0;
+
     // calculate the mean and covariance of 3d points 
     Eigen::Vector3f mu(Eigen::Vector3f::Zero());
     Eigen::Matrix3f sigma(Eigen::Matrix3f::Zero());
@@ -92,17 +96,35 @@ bool Homography::estimateFromDistanceImage( const base::samples::DistanceImage &
 	    Eigen::Matrix3f::Index idx; 
 	    eigenSolver.eigenvalues().real().minCoeff( &idx );
 	    Eigen::Vector3f normal = eigenSolver.eigenvectors().real().col( idx );
-
 	    normal.normalize();
+
+	    // look at the ratio between smallest and other eigenvalues
+	    size_t idx1 = (idx != 0? 0 : 1), idx2 = (idx != 2? 2 : 1);
+	    eigen_ratio = std::max( 
+		    eigenSolver.eigenvalues().real()[idx] / eigenSolver.eigenvalues().real()[ idx1 ],
+		    eigenSolver.eigenvalues().real()[idx] / eigenSolver.eigenvalues().real()[ idx2 ] );
+
 	    // flip the normal if it's not within +-90 deg of the view vector
-	    if( normal.dot( -Eigen::Vector3f::UnitZ() ) < 0 )
+	    view_angle = acos( normal.dot( center.normalized() ) );
+	    if( view_angle > (M_PI/2.0) )
+	    {
 		normal *= -1.0f;
+		view_angle = acos( normal.dot( center.normalized() ) );
+	    }
 
 	    //normal = Eigen::AngleAxisf( M_PI / 2.0, Eigen::Vector3f::UnitX()) * -Eigen::Vector3f::UnitZ();
 
 	    calcHomography( center, normal, homography );
 	}
     }
+
+    // std::cout << "eigen_ratio: " << eigen_ratio << " view_angle: " << view_angle * 180/M_PI << std::endl;
+
+    if( eigen_ratio > 0.2 )
+	return false;
+
+    if( view_angle > (80 / 180.0 * M_PI) )
+	return false;
 
     return true;
 }

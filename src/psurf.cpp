@@ -656,7 +656,7 @@ struct PSURFInvoker
 
 		// estimate homography
 		stereo::Homography h;
-		if( h.estimateFromDistanceImage( *dist_img, center.x, center.y, 10 * s ) )
+		if( s < 10 && h.estimateFromDistanceImage( *dist_img, center.x, center.y, 10 * s ) )
 		{
 		    float radius = 15 * s;
 		    cv::Mat patch; 

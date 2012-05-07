@@ -261,14 +261,25 @@ BOOST_AUTO_TEST_CASE( psurf_test )
     sparseConfig.knn = 2;
     sparseConfig.distanceFactor = 1.6;
     sparseConfig.maxStereoYDeviation = 3;
+    sparseConfig.descriptorType = envire::DESCRIPTOR_PSURF;
     sparse.setConfiguration( sparseConfig );
 
     // set the distance images for psurf processing
-    sparse.setDistanceImages( ldist, rdist);
+    sparse.setDistanceImages( &ldist, &rdist);
 
     // perform sparse processing
     sparse.processFramePair( left, right );
 
     // write sparse stereo debug image 
-    cv::imwrite( prefix_out + "sparse.png", sparse.getDebugImage() );
+    cv::imwrite( prefix_out + "sparse-psurf.png", sparse.getDebugImage() );
+
+    // try the same without psurf
+    sparseConfig.descriptorType = envire::DESCRIPTOR_SURF;
+    sparse.setConfiguration( sparseConfig );
+    sparse.processFramePair( left, right );
+
+    // write sparse stereo debug image 
+    cv::imwrite( prefix_out + "sparse-surf.png", sparse.getDebugImage() );
+
+
 }
