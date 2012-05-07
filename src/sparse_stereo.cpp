@@ -653,6 +653,7 @@ void StereoFeatures::calculateInterFrameCorrespondences(
 	    std::vector<size_t> best_inliers;
 	    const double DIST_THRESHOLD = config.isometryFilterThreshold;
 
+	    std::vector<float> e1, e2;
 	    std::vector<Eigen::Vector3d> x, p;
 	    for( size_t i = 0; i < leftCorrespondences.size(); i++ )
 	    {
@@ -664,14 +665,23 @@ void StereoFeatures::calculateInterFrameCorrespondences(
 		    x.push_back( v1 );
 		    p.push_back( v2 );
 		}
+
+		{
+		    const float dist_factor = 1/70.0;
+		    e1.push_back( v1.norm() * dist_factor );
+		    e2.push_back( v2.norm() * dist_factor );
+		}
 	    }
 
-	    envire::ransac::FitTransform fit( x, p, DIST_THRESHOLD );
-	    envire::ransac::ransacSingleModel( fit, 3, DIST_THRESHOLD, best_model, best_inliers, config.isometryFilterMaxSteps );
+	    if( x.size() >= 3 )
+	    {
+		envire::ransac::FitTransformUncertain fit( x, p, e1, e2, DIST_THRESHOLD );
+		envire::ransac::ransacSingleModel( fit, 3, DIST_THRESHOLD, best_model, best_inliers, config.isometryFilterMaxSteps );
 
-	    correspondenceTransform = best_model;
+		correspondenceTransform = best_model;
+	    }
 
-            matches_mask = vector<uchar>( leftCorrespondences.size(), 0 );
+	    matches_mask = vector<uchar>( leftCorrespondences.size(), 0 );
 	    for( size_t i=0; i<best_inliers.size(); i++ )
 	    {
 		matches_mask[best_inliers[i]] = 1;
