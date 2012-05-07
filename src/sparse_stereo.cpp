@@ -47,11 +47,11 @@ void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
 }
 
 void StereoFeatures::setDistanceImages( 
-	const base::samples::DistanceImage &left, 
-	const base::samples::DistanceImage &right )
+	const base::samples::DistanceImage *left, 
+	const base::samples::DistanceImage *right )
 {
-    dist_left = &left;
-    dist_right = &right;
+    dist_left = left;
+    dist_right = right;
 }
 
 void StereoFeatures::initDetector( size_t lastNumFeatures )

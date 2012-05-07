@@ -33,8 +33,8 @@ public:
      * @param right - right distance image
      */
     void setDistanceImages( 
-	    const base::samples::DistanceImage &left, 
-	    const base::samples::DistanceImage &right );
+	    const base::samples::DistanceImage *left, 
+	    const base::samples::DistanceImage *right );
 
     /** Perform the processing on a stereo frame pair.
      * This will perform feature detection, description, matching and filtering 
