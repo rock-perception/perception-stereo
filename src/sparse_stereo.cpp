@@ -627,6 +627,19 @@ void StereoFeatures::calculateInterFrameCorrespondences(
         // do cross check matching and pre filtering of features
 	crossCheckMatching( feat1, feat2, 
 		leftCorrespondences, config.knn, config.distanceFactor );
+
+	// match the features by size
+	// TODO do properly
+	std::vector<cv::DMatch> leftCorrespondences2 = leftCorrespondences;
+	leftCorrespondences.clear();
+	for( size_t i = 0; i < leftCorrespondences2.size(); i ++ )
+	{
+	    double size_diff = fabs( keyp1[ leftCorrespondences2[i].queryIdx ].size - 
+		    keyp2[ leftCorrespondences2[i].trainIdx ].size ); 
+
+	    if( size_diff < 0.5 )
+		leftCorrespondences.push_back( leftCorrespondences2[i] );
+	}
     }
 
     // do filtering on the point lists. select one of the filters:
