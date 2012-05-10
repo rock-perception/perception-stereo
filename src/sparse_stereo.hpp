@@ -12,6 +12,15 @@
 namespace stereo
 {
 
+struct FeatureInfo
+{
+  base::Time detectorTime;
+  base::Time descriptorTime;
+
+  std::vector<cv::KeyPoint> keypoints;
+  cv::Mat descriptors;
+};
+
 class StereoFeatures
 {
 public:
@@ -45,6 +54,14 @@ public:
     /** Get the result of the last stereo image processing step.
      */
     StereoFeatureArray& getStereoFeatures() { return stereoFeatures; }
+
+    /** Get the result of the last feature extraction, left
+     */
+    FeatureInfo& getFeatureInfoLeft() { return leftFeatures; }
+
+    /** Get the result of the last feature extraction, left
+     */
+    FeatureInfo& getFeatureInfoRight() { return rightFeatures; }
 
     /** calculate the relation between two stereo pairs
      */
@@ -89,15 +106,6 @@ public:
 	    std::vector<cv::DMatch>& filteredMatches12, int knn = 1, float distanceFactor = 2.0 );
 
 protected:
-    struct FeatureInfo
-    {
-	base::Time detectorTime;
-	base::Time descriptorTime;
-
-	std::vector<cv::KeyPoint> keypoints;
-	cv::Mat descriptors;
-    };
-
     void initDetector( size_t lastNumFeatures );
     void findFeatures( const cv::Mat &image, FeatureInfo& info, bool left_frame = true );
 
