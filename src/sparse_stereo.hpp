@@ -5,7 +5,7 @@
 #include <frame_helper/CalibrationCv.h>
 #include <base/time.h>
 #include <base/eigen.h>
-#include <cv.h>
+#include <opencv2/opencv.hpp>
 #include <base/samples/distance_image.h>
 #include "opencv2/gpu/gpu.hpp"
 
@@ -48,9 +48,11 @@ public:
     /** Perform the processing on a stereo frame pair.
      * This will perform feature detection, description, matching and filtering 
      * based on the configuration given in the configuration class.
+     * If the optional last parameter is given, it will not work in class internal 
+     * storage, but in the storage provided.
      */
-    void processFramePair( const cv::Mat &left_image, const cv::Mat &right_image );
-
+    void processFramePair( const cv::Mat &left_image, const cv::Mat &right_image, StereoFeatureArray *stereo_features = NULL );
+     
     /** Get the result of the last stereo image processing step.
      */
     StereoFeatureArray& getStereoFeatures() { return stereoFeatures; }
@@ -100,7 +102,7 @@ public:
     void findFeatures( const cv::Mat &left_image, const cv::Mat &right_image );
     bool getPutativeStereoCorrespondences();
     bool refineFeatureCorrespondences();
-    void calculateDepthInformationBetweenCorrespondences();
+    void calculateDepthInformationBetweenCorrespondences(StereoFeatureArray *stereo_features = NULL);
 
     void crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, 
 	    std::vector<cv::DMatch>& filteredMatches12, int knn = 1, float distanceFactor = 2.0 );

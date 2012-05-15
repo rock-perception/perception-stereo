@@ -197,7 +197,7 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool
     }
 }
 
-void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat &right_image )
+void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat &right_image, StereoFeatureArray *stereo_features )
 {
     stereoFeatures.clear();
     findFeatures( left_image, right_image );
@@ -207,7 +207,7 @@ void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat 
       return;
     }
     refineFeatureCorrespondences();
-    calculateDepthInformationBetweenCorrespondences();
+    calculateDepthInformationBetweenCorrespondences(stereo_features);
 }
 
 void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &rightImage )
@@ -532,12 +532,18 @@ bool StereoFeatures::refineFeatureCorrespondences()
     return !runDefault;
 }
 
-void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
+void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatureArray *stereo_features)
 {
-    stereoFeatures.clear();
+    // create a pointer to the stereo-feature memory which should be used for this function
+    StereoFeatureArray *stereo_feature_pointer = &stereoFeatures;
+
+    if(stereo_features)
+      stereo_feature_pointer = stereo_features;
+
+    stereo_feature_pointer->clear();
 
     // currently we always use the surf descriptor (might change)
-    stereoFeatures.descriptorType = envire::DESCRIPTOR_SURF;
+    stereo_feature_pointer->descriptorType = envire::DESCRIPTOR_SURF;
 
     // get Q Projection Matrix as Eigen
     Eigen::Matrix4d Q;
@@ -571,7 +577,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences()
 	kp.response = leftMatches.keypoints[i].response;
 	kp.point = cv2eigen( leftMatches.keypoints[i].pt );
 
-	stereoFeatures.push_back( 
+	stereo_feature_pointer->push_back( 
 		vh.head<3>(), kp, 
 		Eigen::Map<StereoFeatureArray::Descriptor>( 
 		    leftMatches.descriptors.ptr<float>(i), leftMatches.descriptors.cols ) );
@@ -782,13 +788,17 @@ void StereoFeatures::calculateInterFrameCorrespondences(
     }
 
     cout << "Number of detected Features: " << keyp1.size() << " Number of putative inter-frame matches: " 
-	<< leftCorrespondences.size() << " number of filtered inter-frame matches: " << numberOfGood << endl;
+	<< leftCorrespondences.size() << " number of filtered inter-frame matches: " << correspondences.size() << endl;
 
     return;
 }
 
 cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2 )
 {
+    // throw warning message if used incorrectly
+    if(debug1.depth() < 3)
+      std::cout << "Warning: getInterFrameDebugImage expects 3-channel images, otherwise it will not work properly." << std::endl;
+
     // create the debug image
     cv::Size debugSize = 
 	cv::Size( debug1.size().width, debug1.size().height + debug2.size().height );
