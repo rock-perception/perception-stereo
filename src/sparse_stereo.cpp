@@ -796,7 +796,7 @@ void StereoFeatures::calculateInterFrameCorrespondences(
 cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2 )
 {
     // throw warning message if used incorrectly
-    if(debug1.depth() < 3)
+    if(debug1.channels() < 3)
       std::cout << "Warning: getInterFrameDebugImage expects 3-channel images, otherwise it will not work properly." << std::endl;
 
     // create the debug image
