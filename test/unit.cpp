@@ -109,6 +109,19 @@ BOOST_AUTO_TEST_CASE( sparse_test )
       // increase the detector type
       configuration.detectorType = (stereo::DETECTOR)(configuration.detectorType + 1);
     }
+
+    std::cout << "Performing test on external (class-foreign)  memory for SURF-descriptor...";
+
+    configuration.detectorType = stereo::DETECTOR_SURF;
+    features->setConfiguration(configuration);
+    stereo::StereoFeatureArray stereo_features;
+    features->processFramePair(leftImage, rightImage, &stereo_features);
+    std::cout << " Number of features: " << stereo_features.keypoints.size() << ". ";
+    if(stereo_features.keypoints.size() > 0)
+      std::cout << " Success!" << std::endl;
+    else
+      std::cout << " Failed!" << std::endl;
+
     std::cout << "Finished all Sparse Stereo tests." << std::endl << std::endl;
 }
 
