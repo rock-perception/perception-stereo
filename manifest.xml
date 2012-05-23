@@ -14,4 +14,5 @@
     <depend package="image_processing/frame_helper" />
     <depend package="slam/envire" />
     <depend package="gui/vizkit" optional="1" />
+    <tags>stable</tags>
 </package>
