@@ -33,6 +33,11 @@ void StereoFeatures::setCalibration( const frame_helper::StereoCalibration &cali
     this->calib.setCalibration( calib );
 }
 
+void StereoFeatures::setDetectorConfiguration( const DetectorConfiguration &detector_config )
+{
+   detectorParams = detector_config; 
+}
+
 void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
 {
     this->config = config;
@@ -153,7 +158,6 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool
         detector->detect( image, info.keypoints);
         finish = clock();
         info.detectorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
-
         start = clock();
         descriptorExtractor->compute( image, info.keypoints, info.descriptors );
         finish = clock();
@@ -200,6 +204,7 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool
 void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat &right_image, StereoFeatureArray *stereo_features )
 {
     stereoFeatures.clear();
+
     findFeatures( left_image, right_image );
     if(!getPutativeStereoCorrespondences())
     {

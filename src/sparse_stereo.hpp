@@ -33,7 +33,11 @@ public:
     /** Set the configuration for the stereo processing chain.
      * This will also reset any previous configuration including detector type.
      */
-    void setConfiguration( const FeatureConfiguration &config );
+    void setConfiguration( const FeatureConfiguration &config);
+
+    /** Set the configuration for the feature detector 
+     */
+    void setDetectorConfiguration( const DetectorConfiguration &detector_config );
 
     /** optionally set the distance images before each call to process frame 
      * pair, in order to perform a perspective undistort of the features
