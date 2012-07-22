@@ -140,7 +140,21 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 	    break;
         case DETECTOR_SURF_CV_GPU:
             {
+		int &SURFparam = detectorParams.SURFparam;
+		// adaptively adjust the parameters for the SURF extractor in order to get around TARGET_NUM_FEATURES features
+		//            double surfParamDiff = (localLastNumFeatures - targetNumFeatures);
+		double surfParamDiff = (double)localLastNumFeatures / (double)targetNumFeatures;
+
+		SURFparam = (int)((double)SURFparam * sqrt(surfParamDiff));
+
+		// to prevent the value from running haywire, cap it
+		if(SURFparam < 3)
+		    SURFparam = 3;
+		if(SURFparam > 115500)
+		    SURFparam = 115500;
+
                 use_gpu_detector = true;
+std::cout << "SurfParam: " << detectorParams.SURFparam << " LastNumFeatures: " << localLastNumFeatures << " targetNumFeatures: " << targetNumFeatures<< std::endl;
             }
             break;
 	default: 
