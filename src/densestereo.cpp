@@ -1,6 +1,7 @@
 #include "densestereo.h"
 #include "configuration.h"
 #include <stdexcept>
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace std;
 
