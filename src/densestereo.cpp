@@ -1,6 +1,7 @@
 #include "densestereo.h"
 #include "configuration.h"
 #include <stdexcept>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
 
