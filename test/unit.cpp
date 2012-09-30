@@ -126,22 +126,30 @@ BOOST_AUTO_TEST_CASE( sparse_test )
 
     std::cout << "performing save/load test...";
 
+    std::vector<stereo::StereoFeatureArray> m, m2;
+    m.push_back(stereo_features);
+    m.push_back(stereo_features);
+
     std::ofstream out;
     out.open("test.dat", std::ios::binary);
-    stereo_features.store(out);
+    StoreClassVector(m, out);
     out.close();
 
     std::ifstream in;
     in.open("test.dat", std::ios::binary);
-    stereo::StereoFeatureArray stereo_features2;
-    stereo_features2.load(in);
+    LoadClassVector(m2, in);
     in.close();
 
-    if((stereo_features.time == stereo_features2.time) &&
-       (stereo_features.descriptorSize == stereo_features2.descriptorSize) &&
-       (stereo_features.descriptorType == stereo_features2.descriptorType) &&
-       (stereo_features.keypoints.size() == stereo_features2.keypoints.size()) &&
-       (stereo_features.descriptors.size() == stereo_features2.descriptors.size())
+    if((stereo_features.time == m2[0].time) &&
+       (stereo_features.descriptorSize == m2[0].descriptorSize) &&
+       (stereo_features.descriptorType == m2[0].descriptorType) &&
+       (stereo_features.keypoints.size() == m2[0].keypoints.size()) &&
+       (stereo_features.descriptors.size() == m2[0].descriptors.size()) &&
+       (stereo_features.time == m2[1].time) &&
+       (stereo_features.descriptorSize == m2[1].descriptorSize) &&
+       (stereo_features.descriptorType == m2[1].descriptorType) &&
+       (stereo_features.keypoints.size() == m2[1].keypoints.size()) &&
+       (stereo_features.descriptors.size() == m2[1].descriptors.size())
       )
       std::cout << " Success!" << std::endl;
     else
