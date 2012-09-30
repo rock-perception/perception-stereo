@@ -154,7 +154,7 @@ public:
 
     size_t size() const 
     { 
-	return points.size(); 
+	return keypoints.size(); 
     }
 
     void clear() 
@@ -198,11 +198,14 @@ public:
     }
    void store(std::ostream& os) const
    {
-// Todo: store the 3d points as well!!
      os << time.microseconds << "\n";
      os << descriptorSize << "\n";
      os << (int)descriptorType << "\n";
-//     StoreStreamVector(points, os);
+     os << points.size() << "\n";
+     for(size_t i = 0; i < points.size(); ++i)
+     {
+       os << points[i][0] << " " << points[i][1] << " " << points[i][2] << "\n";
+     }
      StoreClassVector(keypoints, os);
      os << "\n";
      StorePODVector(descriptors, os);
@@ -211,7 +214,6 @@ public:
 
    void load(std::istream& is)
    {
-// Todo: load the 3d points as well!!
      is >> time.microseconds;
      is.ignore(10, '\n');
      is >> descriptorSize;
@@ -220,10 +222,22 @@ public:
      is >> temp;
      is.ignore(10, '\n');
      descriptorType = (envire::DESCRIPTOR)temp;
-//     LoadStreamVector(points, is);
+     size_t size;
+     is >> size;
+     is.ignore(10, '\n');
+     double a, b, c;
+     for(size_t i = 0; i < size; ++i)
+     {
+       is >> a;
+       is >> b;
+       is >> c;
+       points.push_back(Eigen::Vector3d(a, b, c)); 
+       is.ignore(10, '\n');
+     }
      LoadClassVector(keypoints, is);
      is.ignore(10, '\n');
      LoadPODVector(descriptors, is); 
+     is.ignore(10, '\n');
    }
 };
 }
