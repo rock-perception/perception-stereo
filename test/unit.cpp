@@ -24,19 +24,21 @@ BOOST_AUTO_TEST_CASE( sparse_test )
     frame_helper::StereoCalibration calib;
 
     // create canconical calibration matrices for the two virtual cameras with a 100mm stereo setup 
-    calib.camLeft.fx = calib.camLeft.fy = 200.0;
+    calib.camLeft.fx = 200.0;
+    calib.camLeft.fy = 201.0;
     calib.camLeft.d0 = calib.camLeft.d1 = calib.camLeft.d2 = calib.camLeft.d3 = 0.0;
     calib.camLeft.cx = width / 2;
     calib.camLeft.cy = height / 2;
 
-    calib.camRight.fx = calib.camRight.fy = 200.0;
+    calib.camRight.fx = 200.0;
+    calib.camRight.fy = 201.0;
     calib.camRight.d0 = calib.camRight.d1 = calib.camRight.d2 = calib.camRight.d3 = 0.0;
     calib.camRight.cx = width / 2;
     calib.camRight.cy = height / 2;
 
     calib.extrinsic.tx = 100;
     calib.extrinsic.ty = calib.extrinsic.tz = 0;
-    calib.extrinsic.rx = calib.extrinsic.ry = calib.extrinsic.rz = 0.0;
+    calib.extrinsic.rx = calib.extrinsic.ry = calib.extrinsic.rz = 0.01;
 
     // create data on left image. Data will be some rectangles as well as 100 randomly drawn circles of differing size and fill all over the image
     // add some filled rectangles
@@ -118,6 +120,29 @@ BOOST_AUTO_TEST_CASE( sparse_test )
     features->processFramePair(leftImage, rightImage, &stereo_features);
     std::cout << " Number of features: " << stereo_features.keypoints.size() << ". ";
     if(stereo_features.keypoints.size() > 0)
+      std::cout << " Success!" << std::endl;
+    else
+      std::cout << " Failed!" << std::endl;
+
+    std::cout << "performing save/load test...";
+
+    std::ofstream out;
+    out.open("test.dat", std::ios::binary);
+    stereo_features.store(out);
+    out.close();
+
+    std::ifstream in;
+    in.open("test.dat", std::ios::binary);
+    stereo::StereoFeatureArray stereo_features2;
+    stereo_features2.load(in);
+    in.close();
+
+    if((stereo_features.time == stereo_features2.time) &&
+       (stereo_features.descriptorSize == stereo_features2.descriptorSize) &&
+       (stereo_features.descriptorType == stereo_features2.descriptorType) &&
+       (stereo_features.keypoints.size() == stereo_features2.keypoints.size()) &&
+       (stereo_features.descriptors.size() == stereo_features2.descriptors.size())
+      )
       std::cout << " Success!" << std::endl;
     else
       std::cout << " Failed!" << std::endl;

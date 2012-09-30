@@ -5,6 +5,7 @@
 #include <vector>
 #include <base/time.h>
 #include <envire/maps/Featurecloud.hpp>
+#include "store_vector.hpp"
 
 namespace stereo
 {
@@ -109,8 +110,9 @@ struct FeatureConfiguration
     FILTER filterType;
 };
 
-struct StereoFeatureArray
+class StereoFeatureArray
 {
+public:
     base::Time time;
 
     typedef float Scalar;
@@ -194,6 +196,35 @@ struct StereoFeatureArray
 	    }
 	}
     }
+   void store(std::ostream& os) const
+   {
+// Todo: store the 3d points as well!!
+     os << time.microseconds << "\n";
+     os << descriptorSize << "\n";
+     os << (int)descriptorType << "\n";
+//     StoreStreamVector(points, os);
+     StoreClassVector(keypoints, os);
+     os << "\n";
+     StorePODVector(descriptors, os);
+     os << "\n";
+   }
+
+   void load(std::istream& is)
+   {
+// Todo: load the 3d points as well!!
+     is >> time.microseconds;
+     is.ignore(10, '\n');
+     is >> descriptorSize;
+     is.ignore(10, '\n');
+     int temp;
+     is >> temp;
+     is.ignore(10, '\n');
+     descriptorType = (envire::DESCRIPTOR)temp;
+//     LoadStreamVector(points, is);
+     LoadClassVector(keypoints, is);
+     is.ignore(10, '\n');
+     LoadPODVector(descriptors, is); 
+   }
 };
 }
 
