@@ -125,6 +125,8 @@ public:
     std::vector<envire::KeyPoint> keypoints;
     std::vector<Scalar> descriptors;
 
+    double mean_z_value;
+
     StereoFeatureArray() : descriptorSize(0) {}
 
     void push_back( const base::Vector3d& point, const envire::KeyPoint& keypoint, const Descriptor& descriptor ) 
