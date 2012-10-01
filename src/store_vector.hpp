@@ -50,4 +50,60 @@ void LoadPODVector(std::vector<T>& Tvector, std::istream& is)
   }
 };  
 
+template<typename T>
+void StoreEigenMatrix3d(const T &matrix, std::ostream& os)
+{
+  for(int i = 0; i < 3; ++i)
+  {
+    for(int j = 0; j < 3; ++j)
+    {
+      os << matrix(i, j) << " ";
+    }
+  }
+  os << "\n";
+};
+
+template<typename T>
+void LoadEigenMatrix3d(T &matrix, std::istream& is)
+{
+  double a;
+  for(int i = 0; i < 3; ++i)
+  {
+    for(int j = 0; j < 3; ++j)
+    {
+      is >> a;
+      matrix(i, j) = a;
+    }
+  }
+  is.ignore(10, '\n');
+};
+
+template<typename T>
+void StoreEigenMatrix4d(const T &matrix, std::ostream& os)
+{
+  for(int i = 0; i < 4; ++i)
+  {
+    for(int j = 0; j < 4; ++j)
+    {
+      os << matrix(i, j) << " ";
+    }
+  }
+  os << "\n";
+};
+
+template<typename T>
+void LoadEigenMatrix4d(T &matrix, std::istream& is)
+{
+  double a;
+  for(int i = 0; i < 4; ++i)
+  {
+    for(int j = 0; j < 4; ++j)
+    {
+      is >> a;
+      matrix(i, j) = a;
+    }
+  }
+  is.ignore(10, '\n');
+};
+
 #endif
