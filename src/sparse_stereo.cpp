@@ -806,8 +806,8 @@ void StereoFeatures::calculateInterFrameCorrespondences(
 			leftCorrespondences.at(i).trainIdx ) );
     }
 
-    cout << "Number of detected Features: " << keyp1.size() << " Number of putative inter-frame matches: " 
-	<< leftCorrespondences.size() << " number of filtered inter-frame matches: " << correspondences.size() << endl;
+//    cout << "Number of detected Features: " << keyp1.size() << " Number of putative inter-frame matches: " 
+//	<< leftCorrespondences.size() << " number of filtered inter-frame matches: " << correspondences.size() << endl;
 
     return;
 }
