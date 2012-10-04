@@ -154,7 +154,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		    SURFparam = 115500;
 
                 use_gpu_detector = true;
-std::cout << "SurfParam: " << detectorParams.SURFparam << " LastNumFeatures: " << localLastNumFeatures << " targetNumFeatures: " << targetNumFeatures<< std::endl;
+//std::cout << "SurfParam: " << detectorParams.SURFparam << " LastNumFeatures: " << localLastNumFeatures << " targetNumFeatures: " << targetNumFeatures<< std::endl;
             }
             break;
 	default: 
@@ -747,7 +747,6 @@ void StereoFeatures::calculateInterFrameCorrespondences(
                 }
                 // use the two point lists to find the homography
 		cv::Mat H12 = findHomography( cv::Mat(points1), cv::Mat(points2), CV_RANSAC, 1.0 );
-         
                 matches_mask = vector<uchar>( points1.size(), 0 );
                 // create the mask: transform the current frame points using the homography, and compare the result with the last frame points. If that is equal (or very near) it is an inlier.
 		cv::Mat transformed_current_points;
