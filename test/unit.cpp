@@ -148,17 +148,7 @@ BOOST_AUTO_TEST_CASE( sparse_test )
     LoadClassVector(m2, in);
     in.close();
 
-    if((stereo_features.time == m2[0].time) &&
-       (stereo_features.descriptorSize == m2[0].descriptorSize) &&
-       (stereo_features.descriptorType == m2[0].descriptorType) &&
-       (stereo_features.keypoints.size() == m2[0].keypoints.size()) &&
-       (stereo_features.descriptors.size() == m2[0].descriptors.size()) &&
-       (stereo_features.time == m2[1].time) &&
-       (stereo_features.descriptorSize == m2[1].descriptorSize) &&
-       (stereo_features.descriptorType == m2[1].descriptorType) &&
-       (stereo_features.keypoints.size() == m2[1].keypoints.size()) &&
-       (stereo_features.descriptors.size() == m2[1].descriptors.size())
-      )
+    if(stereo_features == m2[0])
       std::cout << " Success!" << std::endl;
     else
       std::cout << " Failed!" << std::endl;
