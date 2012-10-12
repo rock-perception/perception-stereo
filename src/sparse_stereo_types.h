@@ -198,6 +198,26 @@ public:
 	    }
 	}
     }
+
+   void copyTo(StereoFeatureArray &target)
+   {
+     target.time = time;
+     target.descriptorSize = descriptorSize;
+     target.descriptorType = descriptorType;
+     for(size_t i = 0; i < points.size(); ++i)
+     {
+       target.points.push_back(points[i]);
+     }
+     for(size_t i = 0; i < keypoints.size(); ++i)
+     {
+       target.keypoints.push_back(keypoints[i]);
+     }
+     for(size_t i = 0; i < descriptors.size(); ++i)
+     {
+       target.descriptors.push_back(descriptors[i]);
+     }
+   }
+
    void store(std::ostream& os) const
    {
      os << time.microseconds << "\n";
