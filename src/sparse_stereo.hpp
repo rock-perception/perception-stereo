@@ -111,6 +111,8 @@ public:
     void crossCheckMatching( const cv::Mat& descriptors1, const cv::Mat& descriptors2, 
 	    std::vector<cv::DMatch>& filteredMatches12, int knn = 1, float distanceFactor = 2.0 );
 
+    cv::Mat getHomography() { return homography;}
+
 protected:
     void initDetector( size_t lastNumFeatures );
     void findFeatures( const cv::Mat &image, FeatureInfo& info, bool left_frame = true );
@@ -132,6 +134,8 @@ protected:
     cv::Ptr<cv::FeatureDetector> detector;
     cv::Ptr<cv::DescriptorExtractor> descriptorExtractor;
     cv::Ptr<cv::DescriptorMatcher> descriptorMatcher;
+ 
+    cv::Mat homography;
 
     cv::Mat debugImage;
     int debugRightOffset;

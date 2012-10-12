@@ -746,12 +746,12 @@ void StereoFeatures::calculateInterFrameCorrespondences(
                     break;
                 }
                 // use the two point lists to find the homography
-		cv::Mat H12 = findHomography( cv::Mat(points1), cv::Mat(points2), CV_RANSAC, 1.0 );
+		homography = findHomography( cv::Mat(points1), cv::Mat(points2), CV_RANSAC, 1.0 );
                 matches_mask = vector<uchar>( points1.size(), 0 );
                 // create the mask: transform the current frame points using the homography, and compare the result with the last frame points. If that is equal (or very near) it is an inlier.
 		cv::Mat transformed_current_points;
                 // create the mask list, which contains the inliers
-                perspectiveTransform( cv::Mat(points1), transformed_current_points, H12 );
+                perspectiveTransform( cv::Mat(points1), transformed_current_points, homography );
                 for(int i = points1.size() -1; i >= 0; i-- )
                 {
 		    const float inlierRadius = 4.0;
