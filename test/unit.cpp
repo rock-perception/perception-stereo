@@ -124,6 +124,14 @@ BOOST_AUTO_TEST_CASE( sparse_test )
     else
       std::cout << " Failed!" << std::endl;
 
+    std::cout << "performing copyTo test...";
+    stereo::StereoFeatureArray target;
+    stereo_features.copyTo(target);
+    if(stereo_features == target)
+      std::cout << "done." << std::endl;
+    else
+      std::cout << "failed!" << std::endl;
+
     std::cout << "performing save/load test...";
 
     std::vector<stereo::StereoFeatureArray> m, m2;
