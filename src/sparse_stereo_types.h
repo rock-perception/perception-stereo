@@ -218,6 +218,17 @@ public:
      }
    }
 
+   bool operator == (StereoFeatureArray const& target) const
+   { 
+     return target.time == time &&
+            target.descriptorSize == descriptorSize &&
+            target.descriptorType == descriptorType &&
+            target.points.size() == points.size() &&
+            target.keypoints.size() == keypoints.size() &&
+            target.descriptors.size() == descriptors.size(); 
+   }
+
+
    void store(std::ostream& os) const
    {
      os << time.microseconds << "\n";
