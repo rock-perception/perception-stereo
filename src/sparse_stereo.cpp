@@ -568,7 +568,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
     Eigen::Matrix4d Q;
     cv2eigen( calib.Q, Q );
     
-    stereo_features->mean_z_value = 0;
+    stereo_feature_pointer->mean_z_value = 0;
 
     // loop through all features available
     for(size_t i = 0; i < leftMatches.keypoints.size(); i++)
@@ -603,10 +603,10 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
 		Eigen::Map<StereoFeatureArray::Descriptor>( 
 		    leftMatches.descriptors.ptr<float>(i), leftMatches.descriptors.cols ) );
         // keep a running average of the mean z position
-        stereo_features->mean_z_value += v[2];
+        stereo_feature_pointer->mean_z_value += v[2];
     }
     if(leftMatches.keypoints.size() > 0)
-      stereo_features->mean_z_value /= (double)(leftMatches.keypoints.size());
+      stereo_feature_pointer->mean_z_value /= (double)(leftMatches.keypoints.size());
 }
 
 void StereoFeatures::calculateInterFrameCorrespondences( const envire::Featurecloud* fc1, const envire::Featurecloud* fc2, int filterMethod )
