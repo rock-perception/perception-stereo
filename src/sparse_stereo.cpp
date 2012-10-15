@@ -817,7 +817,7 @@ void StereoFeatures::calculateInterFrameCorrespondences(
     return;
 }
 
-cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2 )
+cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2, std::vector<std::pair<long,long> > *correspondence )
 {
     // throw warning message if used incorrectly
     if(debug1.channels() < 3 || debug2.channels() < 3)
@@ -840,11 +840,15 @@ cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const St
 
     const cv::Scalar color = cv::Scalar(255, 0, 0);
     const int width = 1;
-    for( size_t i = 0; i < correspondences.size(); i++ )
+    std::vector<std::pair<long,long> > *corr = &correspondences;
+    if(correspondence)
+      corr = correspondence;
+ 
+    for( size_t i = 0; i < corr->size(); i++ )
     {
 	cv::Point center1, center2;
-	center1 = eigen2cv( frame1.keypoints[ correspondences[i].first ].point );
-	center2 = eigen2cv( frame2.keypoints[ correspondences[i].second ].point );
+	center1 = eigen2cv( frame1.keypoints[ (*corr)[i].first ].point );
+	center2 = eigen2cv( frame2.keypoints[ (*corr)[i].second ].point );
 
 	center2.y += debugTopOffset;
 	cv::line( debugImage, center1, center2, color, width);

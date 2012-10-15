@@ -100,7 +100,7 @@ public:
 
     /** get the debug image for interframe correspondences. 
      */
-    cv::Mat getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2 );
+    cv::Mat getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2 , std::vector<std::pair<long,long> > *correspondence = NULL);
 
 public:
     void findFeatures( const cv::Mat &left_image, const cv::Mat &right_image );
