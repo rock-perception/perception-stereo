@@ -124,12 +124,13 @@ public:
     std::vector<base::Vector3d> points;
     std::vector<envire::KeyPoint> keypoints;
     std::vector<Scalar> descriptors;
+    std::vector<int> source_frame;
 
     double mean_z_value;
 
     StereoFeatureArray() : descriptorSize(0) {}
 
-    void push_back( const base::Vector3d& point, const envire::KeyPoint& keypoint, const Descriptor& descriptor ) 
+    void push_back( const base::Vector3d& point, const envire::KeyPoint& keypoint, const Descriptor& descriptor, int _source_frame = -1 ) 
     {
 	points.push_back( point );
 	keypoints.push_back( keypoint );
@@ -142,6 +143,8 @@ public:
 	// try to have some efficiency in copying the descriptor data
 	descriptors.resize( descriptors.size() + descriptorSize );
 	memcpy( &descriptors[0] + descriptors.size() - descriptorSize, descriptor.data(), descriptorSize ); 
+
+        source_frame.push_back(_source_frame);
     }
 
     Eigen::Map<Descriptor> getDescriptor( size_t index )
@@ -165,6 +168,7 @@ public:
 	points.clear(); 
 	descriptors.clear(); 
 	keypoints.clear(); 
+        source_frame.clear();
     }
 
     void copyTo( envire::Featurecloud& fc ) const
@@ -216,6 +220,10 @@ public:
      {
        target.descriptors.push_back(descriptors[i]);
      }
+     for(size_t i = 0; i < source_frame.size(); ++i)
+     {
+       target.source_frame.push_back(source_frame[i]);
+     }
    }
 
    bool operator == (StereoFeatureArray const& target) const
@@ -225,6 +233,7 @@ public:
             target.descriptorType == descriptorType &&
             target.points.size() == points.size() &&
             target.keypoints.size() == keypoints.size() &&
+            target.source_frame.size() == source_frame.size() &&
             target.descriptors.size() == descriptors.size(); 
    }
 
