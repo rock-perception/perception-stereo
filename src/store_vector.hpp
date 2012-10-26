@@ -17,10 +17,13 @@ void StoreClassVector(const std::vector<T>& Tvector, std::ostream& os)
 };
   
 template<typename T>
-void LoadClassVector(std::vector<T>& Tvector, std::istream& is)
+void LoadClassVector(std::vector<T>& Tvector, std::istream& is, int max_load_indices = -1)
 { 
   typename std::vector<T>::size_type to_load_size(0);
   is.read(reinterpret_cast<char*>(&to_load_size), sizeof(typename std::vector<T>::size_type));
+  // check, if the whole vector should be loaded or only the indices until max_load_indices is reached
+  if(max_load_indices > -1)
+    to_load_size = ((int)to_load_size < max_load_indices)?to_load_size:max_load_indices;
   Tvector.resize(to_load_size);
   for(typename std::vector<T>::size_type i =0; i < to_load_size; ++i)
   {
