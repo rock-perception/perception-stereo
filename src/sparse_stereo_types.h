@@ -252,6 +252,8 @@ public:
      os << "\n";
      StorePODVector(descriptors, os);
      os << "\n";
+     StorePODVector(source_frame, os);
+     os << "\n";
    }
 
    void load(std::istream& is)
@@ -279,6 +281,8 @@ public:
      LoadClassVector(keypoints, is);
      is.ignore(10, '\n');
      LoadPODVector(descriptors, is); 
+     is.ignore(10, '\n');
+     LoadPODVector(source_frame, is); 
      is.ignore(10, '\n');
    }
 };
