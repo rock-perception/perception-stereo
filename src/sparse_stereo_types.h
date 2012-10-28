@@ -184,8 +184,12 @@ public:
 
     /** 
      * copy to a featurecloud, but only up to a maximum distance
+     *
+     * @param fc target feature cloud
+     * @param max_dist any features further away from the origin than this will be ignored
+     * @param transform is going to be aplied to the points before copying
      */
-    void copyTo( envire::Featurecloud& fc, double max_dist ) const
+    void copyTo( envire::Featurecloud& fc, double max_dist, const Eigen::Affine3d& transform = Eigen::Affine3d::Identity() ) const
     {
 	fc.clear();
 	fc.descriptorType = descriptorType;
@@ -195,7 +199,7 @@ public:
 	{
 	    if( points[i].norm() < max_dist )
 	    {
-		fc.vertices.push_back( points[i] );
+		fc.vertices.push_back( transform * points[i] );
 		fc.keypoints.push_back( keypoints[i] );
 		std::vector<float>::const_iterator d = descriptors.begin() + descriptorSize * i;
 		std::copy( d, d + descriptorSize, std::back_inserter( fc.descriptors ) );
