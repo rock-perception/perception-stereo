@@ -82,13 +82,16 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		//            double surfParamDiff = (localLastNumFeatures - targetNumFeatures);
 		double surfParamDiff = (double)localLastNumFeatures / (double)targetNumFeatures;
 
-		SURFparam = (int)((double)SURFparam * surfParamDiff);
+		SURFparam = (int)((double)SURFparam * sqrt(surfParamDiff));
 
 		// to prevent the value from running haywire, cap it
 		if(SURFparam < 3)
 		    SURFparam = 3;
-		if(SURFparam > 5500)
-		    SURFparam = 5500;
+		if(SURFparam > 40000)
+		    SURFparam = 40000;
+
+                if(SURFparam == 40000 || SURFparam == 3)
+                  std::cout << "Warning: it seems the Detector cannot adapt its parameter well enough and encountered a safety cap. Check input images." << std::endl;
 
 		// double hessianThreshold = 400., int octaves = 3, int octaveLayers = 4
 		detector = new cv::SurfFeatureDetector( SURFparam, 4, 3 );
