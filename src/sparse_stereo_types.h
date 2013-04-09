@@ -270,7 +270,7 @@ public:
      is >> temp;
      is.ignore(10, '\n');
      descriptorType = (envire::DESCRIPTOR)temp;
-     size_t size;
+     size_t size = 0;
      is >> size;
      is.ignore(10, '\n');
      double a, b, c;
