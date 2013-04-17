@@ -610,6 +610,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
     }
     if(leftMatches.keypoints.size() > 0)
       stereo_feature_pointer->mean_z_value /= (double)(leftMatches.keypoints.size());
+std::cout << "****************************************** mean_z: " << stereo_feature_pointer->mean_z_value  / -100.0 << "m" << std::endl;
 }
 
 void StereoFeatures::calculateInterFrameCorrespondences( const envire::Featurecloud* fc1, const envire::Featurecloud* fc2, int filterMethod )
