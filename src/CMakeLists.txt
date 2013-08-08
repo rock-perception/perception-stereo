@@ -7,7 +7,7 @@ rock_find_pkgconfig(OPENCV REQUIRED opencv)
 find_library(OPENCV_GPU_LIB NAMES opencv_gpu HINTS ${OPENCV_LIBRARY_DIRS})
 
 if (NOT OPENCV_GPU_LIB)
-    message(FATAL "cannot find the opencv_gpu library in ${OPENCV_LIBRARY_DIRS}. This is required")
+    message(FATAL_ERROR "cannot find the opencv_gpu library in ${OPENCV_LIBRARY_DIRS}. This is required")
 endif()
 
 # use sse3 instruction set
