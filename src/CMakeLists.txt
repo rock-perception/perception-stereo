@@ -1,13 +1,16 @@
 # include macro
 include(FindPkgConfig)
 
-# The CV 2.3 pkg-config file does not include the opencv_gpu library. Look for
-# it manually
 rock_find_pkgconfig(OPENCV REQUIRED opencv)
-find_library(OPENCV_GPU_LIB NAMES opencv_gpu HINTS ${OPENCV_LIBRARY_DIRS})
-
-if (NOT OPENCV_GPU_LIB)
-    message(FATAL_ERROR "cannot find the opencv_gpu library in ${OPENCV_LIBRARY_DIRS}. This is required")
+if (${OPENCV_VERSION} VERSION_LESS 2.4)
+    # The CV 2.3 pkg-config file does not include the opencv_gpu library. Look for
+    # it manually
+    find_library(OPENCV_GPU_LIB NAMES opencv_gpu HINTS ${OPENCV_LIBRARY_DIRS})
+    if (NOT OPENCV_GPU_LIB)
+        message(FATAL_ERROR "cannot find the opencv_gpu library in ${OPENCV_LIBRARY_DIRS}. This is required")
+    endif()
+else()
+    set(OPENCV_GPU_LIB)
 endif()
 
 # use sse3 instruction set
