@@ -1,6 +1,13 @@
+#ifndef STEREO_PSURF_H
+#define STEREO_PSURF_H
+
+#include <stereo/config.h>
 #include <limits>
 #include "opencv2/features2d/features2d.hpp"
 #include <base/samples/distance_image.h>
+#ifdef PSURF_NEEDS_LEGACY
+#include <opencv2/legacy/compat.hpp>
+#endif
 
 namespace cv
 {
@@ -52,3 +59,5 @@ protected:
 };
 
 }
+
+#endif
