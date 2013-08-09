@@ -1,0 +1,7 @@
+#ifndef STEREO_CONFIG_H
+#define STEREO_CONFIG_H
+
+#cmakedefine OPENCV_HAS_GPUMAT_IN_CORE
+#cmakedefine PSURF_NEEDS_LEGACY
+
+#endif
