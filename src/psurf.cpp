@@ -1,6 +1,9 @@
 #include <iostream>
 #include <sstream>
 #include <stereo/homography.h>
+#ifdef PSURF_NEEDS_LEGACY
+#include <opencv2/legacy/compat.hpp>
+#endif
 
 /* Original code has been submitted by Liu Liu. Here is the copyright.
 ----------------------------------------------------------------------------------

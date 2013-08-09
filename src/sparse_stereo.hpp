@@ -7,7 +7,12 @@
 #include <base/eigen.h>
 #include <opencv2/opencv.hpp>
 #include <base/samples/distance_image.h>
-#include "opencv2/gpu/gpu.hpp"
+
+#ifdef OPENCV_HAS_GPUMAT_IN_CORE
+#include <opencv2/core/gpumat.hpp>
+#else
+#include <opencv2/gpu/gpu.hpp>
+#endif
 
 namespace stereo
 {
