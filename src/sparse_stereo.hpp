@@ -1,13 +1,19 @@
 #ifndef __VISUAL_ODOMETRY_STEREO_HPP__
 #define __VISUAL_ODOMETRY_STEREO_HPP__
 
+#include <stereo/config.h>
 #include <stereo/sparse_stereo_types.h>
 #include <frame_helper/CalibrationCv.h>
 #include <base/time.h>
 #include <base/eigen.h>
 #include <opencv2/opencv.hpp>
 #include <base/samples/distance_image.h>
-#include "opencv2/gpu/gpu.hpp"
+
+#ifdef OPENCV_HAS_GPUMAT_IN_CORE
+#include <opencv2/core/gpumat.hpp>
+#else
+#include <opencv2/gpu/gpu.hpp>
+#endif
 
 namespace stereo
 {

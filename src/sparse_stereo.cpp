@@ -43,10 +43,12 @@ void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
     this->config = config;
     initDetector( config.targetNumFeatures );
 
-    if( config.descriptorType == envire::DESCRIPTOR_SURF )
-	descriptorExtractor = new cv::SurfDescriptorExtractor(4, 3, false);
-    else if( config.descriptorType == envire::DESCRIPTOR_PSURF )
+    if( config.descriptorType == envire::DESCRIPTOR_PSURF )
 	descriptorExtractor = new cv::PSurfDescriptorExtractor(4, 3, false);
+#ifdef OPENCV_HAS_SURF
+    else if( config.descriptorType == envire::DESCRIPTOR_SURF )
+	descriptorExtractor = new cv::SurfDescriptorExtractor(4, 3, false);
+#endif
     else
 	throw std::runtime_error( "Unknown descriptorType" );
 }
@@ -75,6 +77,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
                 initDetector(lastNumFeatures);
 	    }
 	    break;
+#ifdef OPENCV_HAS_SURF
 	case DETECTOR_SURF:
 	    {
 		int &SURFparam = detectorParams.SURFparam;
@@ -94,6 +97,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::SurfFeatureDetector( SURFparam, 4, 3 );
 	    }
 	    break;
+#endif
 	case DETECTOR_GOOD:
 	    {   
 		float &goodParam = detectorParams.goodParam;
@@ -107,6 +111,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::GoodFeaturesToTrackDetector( targetNumFeatures + 20, goodParam, 15.0, 15, false, 0.04 );
 	    }
 	    break;
+#ifdef OPENCV_HAS_SIFT
 	case DETECTOR_SIFT:
 	    {
 		// double threshold, double edgeThreshold, int nOctaves=SIFT::CommonParams::DEFAULT_NOCTAVES, int nOctaveLayers=SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS, 
@@ -114,6 +119,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::SiftFeatureDetector();
 	    }
 	    break;
+#endif
 	case DETECTOR_MSER:
 	    {
 		float &mserParam = detectorParams.mserParam;
@@ -138,6 +144,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 		detector = new cv::FastFeatureDetector(fastParam);
 	    }
 	    break;
+#ifdef OPENCV_HAS_SURF_GPU
         case DETECTOR_SURF_CV_GPU:
             {
 		int &SURFparam = detectorParams.SURFparam;
@@ -157,6 +164,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 //std::cout << "SurfParam: " << detectorParams.SURFparam << " LastNumFeatures: " << localLastNumFeatures << " targetNumFeatures: " << targetNumFeatures<< std::endl;
             }
             break;
+#endif
 	default: 
 	    throw std::runtime_error("Selected feature detector is not implemented.");
     }
@@ -166,6 +174,8 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool
 {
     clock_t start, finish;
 
+    // Note: use_gpu_detector is always false if the surf-gpu support of opencv
+    // is unavailable
     if(!use_gpu_detector)
     {
         start = clock();
@@ -177,6 +187,7 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool
         finish = clock();
         info.descriptorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
     }
+#ifdef OPENCV_HAS_SURF_GPU
     else
     {
         // the structure for the GPU detector is a bit different, so handle it separately
@@ -213,6 +224,7 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool
             findFeatures( image, info );
         }
     }
+#endif
 }
 
 void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat &right_image, StereoFeatureArray *stereo_features )
@@ -351,7 +363,15 @@ bool StereoFeatures::getPutativeStereoCorrespondences()
     }
 
     // check if the matching should be done on the GPU
-    if(use_gpu_detector)
+    // Note: use_gpu_detector is always false if the surf-gpu support of opencv
+    // is unavailable
+    if(!use_gpu_detector)
+    {
+        // do good cross check matching
+        crossCheckMatching( leftFeatures.descriptors, rightFeatures.descriptors, stereoCorrespondences, config.knn, config.distanceFactor);
+    }
+#ifdef OPENCV_HAS_SURF_GPU
+    else
     {
             // do stereo feature matching on the GPU.
             cv::gpu::BruteForceMatcher_GPU< cv::L2<float> > gpu_matcher;
@@ -369,11 +389,7 @@ bool StereoFeatures::getPutativeStereoCorrespondences()
             // use the gpu generated data for a cross check match
             crossCheckMatching(matches12, matches21, stereoCorrespondences, config.knn, config.distanceFactor);
     }
-    else 
-    {
-        // do good cross check matching
-        crossCheckMatching( leftFeatures.descriptors, rightFeatures.descriptors, stereoCorrespondences, config.knn, config.distanceFactor);
-    }
+#endif
 
     // resize the descriptor matrices
     leftPutativeMatches.descriptors.create( stereoCorrespondences.size(),

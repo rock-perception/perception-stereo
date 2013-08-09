@@ -2,7 +2,9 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <frame_helper/CalibrationCv.h>
+#ifdef HAS_SPARSE_STEREO
 #include <stereo/sparse_stereo.hpp>
+#endif
 #include <stereo/densestereo.h>
 #include <stereo/homography.h>
 
@@ -11,6 +13,7 @@
 #include "opencv2/highgui/highgui.hpp"
 
 
+#ifdef HAS_SPARSE_STEREO
 BOOST_AUTO_TEST_CASE( sparse_test ) 
 {
     std::cout << "Testing Sparse Stereo functionality" << std::endl;
@@ -155,6 +158,7 @@ BOOST_AUTO_TEST_CASE( sparse_test )
 
     std::cout << "Finished all Sparse Stereo tests." << std::endl << std::endl;
 }
+#endif
 
 
 const std::string prefix = "test/";
@@ -277,6 +281,7 @@ void testHomography( const base::samples::DistanceImage& dimage, cv::Mat& image 
 }
 
 
+#ifdef HAS_SPARSE_STEREO
 BOOST_AUTO_TEST_CASE( psurf_test ) 
 {
     const std::string test = "";
@@ -324,6 +329,5 @@ BOOST_AUTO_TEST_CASE( psurf_test )
 
     // write sparse stereo debug image 
     cv::imwrite( prefix_out + "sparse-surf.png", sparse.getDebugImage() );
-
-
 }
+#endif
