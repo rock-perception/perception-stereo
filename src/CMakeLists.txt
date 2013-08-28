@@ -3,6 +3,7 @@ include(FindPkgConfig)
 
 rock_find_pkgconfig(OPENCV REQUIRED opencv)
 if (${OPENCV_VERSION} VERSION_LESS 2.4)
+    message(STATUS "found pre-2.4 OpenCV version")
     # The CV 2.3 pkg-config file does not include the opencv_gpu library. Look for
     # it manually
     find_library(OPENCV_GPU_LIB NAMES opencv_gpu HINTS ${OPENCV_LIBRARY_DIRS})
@@ -10,6 +11,7 @@ if (${OPENCV_VERSION} VERSION_LESS 2.4)
         message(FATAL_ERROR "cannot find the opencv_gpu library in ${OPENCV_LIBRARY_DIRS}. This is required")
     endif()
 else()
+    message(STATUS "found post-2.4 OpenCV version in ${OPENCV_INCLUDE_DIRS}")
     # Check if the non-free stuff is there
     find_file(OPENCV_HAS_NONFREE
         opencv2/nonfree/features2d.hpp
@@ -23,9 +25,16 @@ else()
     set(PSURF_NEEDS_LEGACY TRUE)
     if (OPENCV_HAS_NONFREE)
         add_definitions(-DOPENCV_HAS_SURF -DOPENCV_HAS_SIFT -DOPENCV_HAS_NONFREE)
+    else()
+        message(STATUS "the OpenCV version you have does not provide the non-free algorithms such has SURF and SIFT, support for them will be disabled")
     endif()
-    if (OPENCV_HAS_GPU)
+
+    # Even if we had the GPU / SURF GPU code, the sparse stereo class uses
+    # pre-2.4 API for which there is no backward compatibility
+    if (false AND OPENCV_HAS_GPU)
         add_definitions(-DOPENCV_HAS_SURF_GPU)
+    else()
+        message(STATUS "the OpenCV version you have does not provide the GPU-accelerated algorithms, support for them will be disabled")
     endif()
 endif()
 
