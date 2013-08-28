@@ -10,6 +10,10 @@ if (${OPENCV_VERSION} VERSION_LESS 2.4)
     if (NOT OPENCV_GPU_LIB)
         message(FATAL_ERROR "cannot find the opencv_gpu library in ${OPENCV_LIBRARY_DIRS}. This is required")
     endif()
+
+    add_definitions(-DOPENCV_HAS_SURF)
+    add_definitions(-DOPENCV_HAS_SIFT)
+    add_definitions(-DOPENCV_HAS_SURF_GPU)
 else()
     message(STATUS "found post-2.4 OpenCV version in ${OPENCV_INCLUDE_DIRS}")
     # Check if the non-free stuff is there
