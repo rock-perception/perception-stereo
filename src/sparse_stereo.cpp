@@ -5,7 +5,9 @@
 #include <envire/ransac.hpp>
 #include "psurf.h"
 
+#ifdef OPENCV_HAS_SURF_GPU
 #include <opencv2/gpu/gpu.hpp>
+#endif
 
 using namespace stereo;
 using namespace std;
