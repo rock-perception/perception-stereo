@@ -9,6 +9,10 @@
 #include <opencv2/gpu/gpu.hpp>
 #endif
 
+#ifdef OPENCV_HAS_NONFREE
+#include <opencv2/nonfree/features2d.hpp>
+#endif
+
 using namespace stereo;
 using namespace std;
 
