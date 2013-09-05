@@ -43,7 +43,7 @@ else()
 endif()
 
 configure_file(config.h.in stereo/config.h)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
 # use sse3 instruction set
 set(CMAKE_CXX_FLAGS "-msse3")
