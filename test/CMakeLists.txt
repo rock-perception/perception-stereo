@@ -11,6 +11,7 @@ rock_testsuite(dense_stereo
     DEPS stereo)
 
 if( envire_FOUND AND vizkit_FOUND )
+find_package(Boost REQUIRED system)
 rock_testsuite(test_stereo-viz
     viz.cpp
     DEPS stereo stereo-viz
