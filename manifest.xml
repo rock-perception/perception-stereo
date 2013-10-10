@@ -13,6 +13,6 @@
     <depend package="base/types" />
     <depend package="image_processing/frame_helper" />
     <depend package="slam/envire" />
-    <depend package="gui/vizkit" optional="1" />
+    <depend package="gui/vizkit3d" optional="1" />
     <tags>stable</tags>
 </package>

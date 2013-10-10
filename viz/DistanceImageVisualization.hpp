@@ -1,8 +1,8 @@
 #ifndef stereo_DistanceImageVisualization_H
 #define stereo_DistanceImageVisualization_H
 
-#include <vizkit/Vizkit3DPlugin.hpp>
-#include <vizkit/EnvireVisualization.hpp>
+#include <vizkit3d/Vizkit3DPlugin.hpp>
+#include <vizkit3d/EnvireVisualization.hpp>
 #include <base/samples/distance_image.h>
 
 #include <boost/noncopyable.hpp>
@@ -15,7 +15,7 @@ namespace envire
     class Pointcloud;
 }
 
-namespace vizkit
+namespace vizkit3d
 {
     class DistanceImageVisualization
         : public envire::EnvireVisualization

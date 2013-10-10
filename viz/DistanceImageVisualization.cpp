@@ -4,7 +4,7 @@
 #include <envire/maps/Pointcloud.hpp>
 #include <envire/maps/Grids.hpp>
 
-using namespace vizkit;
+using namespace vizkit3d;
 using namespace envire;
 
 DistanceImageVisualization::DistanceImageVisualization()
