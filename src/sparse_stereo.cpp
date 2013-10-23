@@ -606,7 +606,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
 		Eigen::Map<StereoFeatureArray::Descriptor>( 
 		    leftMatches.descriptors.ptr<float>(i), leftMatches.descriptors.cols ) );
         // keep a running average of the mean z position
-        stereo_feature_pointer->mean_z_value += v[2];
+        stereo_feature_pointer->mean_z_value += vh[2];
     }
     if(leftMatches.keypoints.size() > 0)
       stereo_feature_pointer->mean_z_value /= (double)(leftMatches.keypoints.size());
