@@ -4,6 +4,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <envire/ransac.hpp>
 #include "psurf.h"
+#include <thread>
 
 using namespace stereo;
 using namespace std;
@@ -165,7 +166,74 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
     }
 }
 
-void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool left_frame )
+void StereoFeatures::findFeatures_threading( const cv::Mat &image, FeatureInfo& info, bool left_frame, int crop_left, int crop_right )
+{
+  // parameter for border overlap (to minimize aliasing at borders)
+  int border = 50;
+  int start = crop_left;
+  if(!left_frame)
+    start = crop_right;
+  cv::Mat image_c(image, cv::Rect(start, 0, image.size().width - crop_left - crop_right, image.size().height));
+  // create sub-images
+  cv::Mat sub1( image_c, cv::Rect( 0, 0, image_c.size().width / 2 + border, image_c.size().height / 2 + border ) );
+  cv::Mat sub2( image_c, cv::Rect( image_c.size().width / 2 - border, 0, image_c.size().width / 2 + border, image_c.size().height / 2 + border) );
+  cv::Mat sub3( image_c, cv::Rect( 0, image_c.size().height / 2 - border, image_c.size().width / 2 + border, image_c.size().height / 2 + border) );
+  cv::Mat sub4( image_c, cv::Rect( image_c.size().width / 2 - border, image_c.size().height / 2 - border, image_c.size().width / 2 + border, image_c.size().height / 2 + border) );
+  // create temporary storages
+  FeatureInfo info1, info2, info3, info4;
+
+  // run threads
+  std::thread t1(&StereoFeatures::findFeatures2, this, sub1, std::ref(info1), left_frame, crop_left, crop_right);
+  std::thread t2(&StereoFeatures::findFeatures2, this, sub2, std::ref(info2), left_frame, crop_left, crop_right);
+  std::thread t3(&StereoFeatures::findFeatures2, this, sub3, std::ref(info3), left_frame, crop_left, crop_right);
+  std::thread t4(&StereoFeatures::findFeatures2, this, sub4, std::ref(info4), left_frame, crop_left, crop_right);
+
+  // wait for finishing
+  t1.join();
+  t2.join();
+  t3.join();
+  t4.join();
+
+  // now copy the keypoints from temp storage into return value. For the last 3, add x/y offset.
+  for(size_t i = 0; i < info1.keypoints.size(); ++i)
+  {
+    cv::KeyPoint kp = info1.keypoints[i];
+    kp.pt.x += start;
+    info.keypoints.push_back(kp);
+  }
+
+  for(size_t i = 0; i < info2.keypoints.size(); ++i)
+  {
+    cv::KeyPoint kp = info2.keypoints[i];
+    kp.pt.x += image_c.size().width / 2 - border + start;
+    info.keypoints.push_back(kp);
+  }
+
+  for(size_t i = 0; i < info3.keypoints.size(); ++i)
+  {
+    cv::KeyPoint kp = info3.keypoints[i];
+    kp.pt.x += start;
+    kp.pt.y += image_c.size().height / 2 - border;
+    info.keypoints.push_back(kp);
+  }
+
+  for(size_t i = 0; i < info4.keypoints.size(); ++i)
+  {
+    cv::KeyPoint kp = info4.keypoints[i];
+    kp.pt.x += image_c.size().width / 2 - border + start;
+    kp.pt.y += image_c.size().height / 2 - border;
+    info.keypoints.push_back(kp);
+  }
+
+  // copy descriptors from temp storage into return value
+  info.descriptors.push_back(info1.descriptors);
+  info.descriptors.push_back(info2.descriptors);
+  info.descriptors.push_back(info3.descriptors);
+  info.descriptors.push_back(info4.descriptors);
+}
+
+
+void StereoFeatures::findFeatures2( const cv::Mat &image, FeatureInfo& info, bool left_frame, int crop_left, int crop_right )
 {
     clock_t start, finish;
 
@@ -213,7 +281,7 @@ void StereoFeatures::findFeatures( const cv::Mat &image, FeatureInfo& info, bool
         {
             std::cout << "FindFeatures (Warn): detectorType == DETECTOR_SURF_CV_GPU was selected, but opencv was not build with CUDA support Switching to CPU-SURF (detectorType == DETECTOR_SURF). Please Re-Build opencv with CUDA enabled to use DETECTOR_SURF_CV_GPU." << std::endl;
             use_gpu_detector = false;
-            findFeatures( image, info );
+            findFeatures2( image, info );
         }
     }
 }
@@ -232,7 +300,7 @@ void StereoFeatures::processFramePair( const cv::Mat &left_image, const cv::Mat 
     calculateDepthInformationBetweenCorrespondences(stereo_features);
 }
 
-void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &rightImage )
+void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &rightImage, int use_threading, int crop_left, int crop_right )
 {
     // initialize the calibration structure
     // if the image size has changed
@@ -250,11 +318,46 @@ void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &righ
 	dynamic_cast<cv::PSurfDescriptorExtractor*>( &(*descriptorExtractor) ); 
     if( dist_left && psurf )
 	psurf->setDistanceImage( dist_left );
-    findFeatures( leftImage, leftFeatures, true );
+
+    std::thread *t1 = NULL, *t2 = NULL;
+
+    switch(use_threading)
+    {
+      case 2: // use internal and external threading (e.g. one thread per stereo image and four threads per individual image = 8 threads)
+        t1 = new std::thread(&StereoFeatures::findFeatures_threading, this, leftImage, std::ref(leftFeatures), true, crop_left, crop_right);
+        break;
+      case 1: // only use external threading (e.g. one thread per stereo image = 2 threads
+        t1 = new std::thread(&StereoFeatures::findFeatures2, this, leftImage, std::ref(leftFeatures), true, crop_left, crop_right);
+        break;
+      default: // use no threading
+        findFeatures2( leftImage, leftFeatures, true, crop_left, crop_right );
+        break;
+    }
 
     if( dist_right && psurf ) 
 	psurf->setDistanceImage( dist_right );
-    findFeatures( rightImage, rightFeatures, false );
+
+    switch(use_threading)
+    {
+      case 2: // use internal and external threading (e.g. one thread per stereo image and four threads per individual image = 8 threads)
+        t2 = new std::thread(&StereoFeatures::findFeatures_threading, this, rightImage, std::ref(rightFeatures), false, crop_left, crop_right);
+        break;
+      case 1: // only use external threading (e.g. one thread per stereo image = 2 threads
+        t2 = new std::thread(&StereoFeatures::findFeatures2, this, rightImage, std::ref(rightFeatures), false, crop_left, crop_right);
+        break;
+      default: // use no threading
+        findFeatures2( rightImage, rightFeatures, false, crop_left, crop_right );
+        break;
+    }
+
+    if(use_threading > 0)
+    {
+      t1->join();
+      t2->join();
+
+      delete t1;
+      delete t2;
+    }
 
     if( config.adaptiveDetectorParam )
     {

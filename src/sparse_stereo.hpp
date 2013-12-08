@@ -103,7 +103,8 @@ public:
     cv::Mat getInterFrameDebugImage( const cv::Mat& debug1, const StereoFeatureArray& frame1, const cv::Mat& debug2, const StereoFeatureArray& frame2 , std::vector<std::pair<long,long> > *correspondence = NULL);
 
 public:
-    void findFeatures( const cv::Mat &left_image, const cv::Mat &right_image );
+    // use threading parameter: 0 for no threads, 1 for 2 threads (one per image), 2 for 8 threads (4 per image).
+    void findFeatures( const cv::Mat &left_image, const cv::Mat &right_image, int use_threading = 0, int crop_left = 0, int crop_right = 0); 
     bool getPutativeStereoCorrespondences();
     bool refineFeatureCorrespondences();
     void calculateDepthInformationBetweenCorrespondences(StereoFeatureArray *stereo_features = NULL);
@@ -115,7 +116,8 @@ public:
 
 protected:
     void initDetector( size_t lastNumFeatures );
-    void findFeatures( const cv::Mat &image, FeatureInfo& info, bool left_frame = true );
+    void findFeatures2( const cv::Mat &image, FeatureInfo& info, bool left_frame = true, int crop_left = 0, int crop_right = 0 );
+    void findFeatures_threading( const cv::Mat &image, FeatureInfo& info, bool left_frame = true, int crop_left = 0, int crop_right = 0);
 
     void crossCheckMatching( std::vector<std::vector<cv::DMatch> > matches12, std::vector<std::vector<cv::DMatch> > matches21, std::vector<cv::DMatch>& filteredMatches12, int knn = 1, float distanceFactor = 2.0);
 

@@ -12,6 +12,7 @@ endif()
 
 # use sse3 instruction set
 set(CMAKE_CXX_FLAGS "-msse3")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
 
 rock_library(stereo
     SOURCES densestereo.cpp sparse_stereo.cpp psurf.cpp homography.cpp dense_stereo_types.cpp configuration.cpp
