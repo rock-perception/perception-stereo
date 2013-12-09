@@ -96,6 +96,7 @@ void StereoFeatures::initDetector( size_t lastNumFeatures )
 
 		// double hessianThreshold = 400., int octaves = 3, int octaveLayers = 4
 		detector = new cv::SurfFeatureDetector( SURFparam, 4, 3 );
+//std::cout << "SurfParam: " << detectorParams.SURFparam << " NumFeatures: " << lastNumFeatures << std::endl;
 	    }
 	    break;
 	case DETECTOR_GOOD:
@@ -236,15 +237,25 @@ void StereoFeatures::findFeatures_threading( const cv::Mat &image, FeatureInfo& 
 void StereoFeatures::findFeatures2( const cv::Mat &image, FeatureInfo& info, bool left_frame, int crop_left, int crop_right )
 {
     clock_t start, finish;
+    int start_left = crop_left;
+    if(!left_frame)
+      start_left = crop_right;
+    // apply cropping of the image
+    cv::Mat image_c(image, cv::Rect(start_left, 0, image.size().width - crop_left - crop_right, image.size().height));
 
     if(!use_gpu_detector)
     {
         start = clock();
-        detector->detect( image, info.keypoints);
+        detector->detect( image_c, info.keypoints);
+        // correct the keypoint position by the cropping factor
+        for(size_t i = 0; i < info.keypoints.size(); ++i)
+        {
+          info.keypoints[i].pt.x += start_left;
+        }
         finish = clock();
         info.detectorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
         start = clock();
-        descriptorExtractor->compute( image, info.keypoints, info.descriptors );
+        descriptorExtractor->compute( image_c, info.keypoints, info.descriptors );
         finish = clock();
         info.descriptorTime = base::Time::fromSeconds( (finish - start) / (CLOCKS_PER_SEC * 1.0) );
     }
@@ -281,7 +292,7 @@ void StereoFeatures::findFeatures2( const cv::Mat &image, FeatureInfo& info, boo
         {
             std::cout << "FindFeatures (Warn): detectorType == DETECTOR_SURF_CV_GPU was selected, but opencv was not build with CUDA support Switching to CPU-SURF (detectorType == DETECTOR_SURF). Please Re-Build opencv with CUDA enabled to use DETECTOR_SURF_CV_GPU." << std::endl;
             use_gpu_detector = false;
-            findFeatures2( image, info );
+            findFeatures2( image, info, left_frame, crop_left, crop_right );
         }
     }
 }
@@ -320,6 +331,8 @@ void StereoFeatures::findFeatures( const cv::Mat &leftImage, const cv::Mat &righ
 	psurf->setDistanceImage( dist_left );
 
     std::thread *t1 = NULL, *t2 = NULL;
+    leftFeatures.keypoints.clear();
+    rightFeatures.keypoints.clear();
 
     switch(use_threading)
     {
