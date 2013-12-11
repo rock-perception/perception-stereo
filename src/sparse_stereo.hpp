@@ -104,7 +104,7 @@ public:
 
 public:
     // use threading parameter: 0 for no threads, 1 for 2 threads (one per image), 2 for 8 threads (4 per image).
-    void findFeatures( const cv::Mat &left_image, const cv::Mat &right_image, int use_threading = 0, int crop_left = 0, int crop_right = 0); 
+    void findFeatures( const cv::Mat &left_image, const cv::Mat &right_image, int use_threading = 1, int crop_left = 0, int crop_right = 0); 
     bool getPutativeStereoCorrespondences();
     bool refineFeatureCorrespondences();
     void calculateDepthInformationBetweenCorrespondences(StereoFeatureArray *stereo_features = NULL);
