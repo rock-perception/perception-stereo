@@ -17,7 +17,7 @@ int main( int argc, char* argv[] )
     assert( cleft.size() == cright.size() );
     
     frame_helper::StereoCalibrationCv calib;
-    calib.setCalibration( frame_helper::StereoCalibration::fromMatlabFile( argv[3]) );
+    calib.setCalibration( frame_helper::StereoCalibration::fromMatlabFile( argv[3], cleft.size().width, cleft.size().height) );
     calib.setImageSize( cleft.size() );
     calib.initCv();
 

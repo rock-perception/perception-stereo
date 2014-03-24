@@ -164,9 +164,9 @@ BOOST_AUTO_TEST_CASE( sparse_test )
 const std::string prefix = "test/";
 const std::string prefix_out = "build/test/";
 
-frame_helper::StereoCalibration getTestCalibration( const std::string& name )
+frame_helper::StereoCalibration getTestCalibration( const std::string& name, int width, int height )
 {
-    return frame_helper::StereoCalibration::fromMatlabFile( prefix + "calib" + name + ".txt" );
+    return frame_helper::StereoCalibration::fromMatlabFile( prefix + "calib" + name + ".txt", width, height );
 }
 
 void getTestImages( const std::string& name, cv::Mat& left, cv::Mat& right )
@@ -181,7 +181,7 @@ void getTestImages( const std::string& name, cv::Mat& left, cv::Mat& right )
     cv::cvtColor( cright, gright, CV_BGR2GRAY );
 
     frame_helper::StereoCalibrationCv calib;
-    calib.setCalibration( getTestCalibration( name ) );
+    calib.setCalibration( getTestCalibration( name, cleft.size().width, cleft.size().height ) );
     calib.setImageSize( cleft.size() );
     calib.initCv();
 
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE( dense_test )
     stereo::DenseStereo dense;
 
     // update calibration
-    dense.setStereoCalibration( getTestCalibration(""), left.size().width, left.size().height );
+    dense.setStereoCalibration( getTestCalibration("", left.size().width, left.size().height ), left.size().width, left.size().height );
 
     // process left/right frame and get disparity images
     cv::Mat ldisp, rdisp;
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE( psurf_test )
 
     // setup dense stereo object and init calibration
     stereo::DenseStereo dense;
-    dense.setStereoCalibration( getTestCalibration(test), left.size().width, left.size().height );
+    dense.setStereoCalibration( getTestCalibration(test, left.size().width, left.size().height ), left.size().width, left.size().height );
 
     // process left/right frame and get disparity images
     base::samples::DistanceImage ldist, rdist;
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE( psurf_test )
 
     // setup sparse stereo
     stereo::StereoFeatures sparse;
-    sparse.setCalibration( getTestCalibration(test) );
+    sparse.setCalibration( getTestCalibration(test, left.size().width, left.size().height) );
 
     // setup configuration
     stereo::FeatureConfiguration sparseConfig;
