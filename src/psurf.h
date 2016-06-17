@@ -4,7 +4,7 @@
 #include <stereo/config.h>
 #include <limits>
 #include "opencv2/features2d/features2d.hpp"
-#include <base/samples/distance_image.h>
+#include <base/samples/DistanceImage.hpp>
 #ifdef PSURF_NEEDS_LEGACY
 #include <opencv2/legacy/compat.hpp>
 #endif

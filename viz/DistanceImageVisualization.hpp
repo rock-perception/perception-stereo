@@ -3,7 +3,7 @@
 
 #include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <vizkit3d/EnvireVisualization.hpp>
-#include <base/samples/distance_image.h>
+#include <base/samples/DistanceImage.hpp>
 
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>

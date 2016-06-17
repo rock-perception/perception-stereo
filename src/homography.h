@@ -1,7 +1,7 @@
 #ifndef __STEREO_HOMGRAPHY_H__
 #define __STEREO_HOMGRAPHY_H__
 
-#include <base/samples/distance_image.h>
+#include <base/samples/DistanceImage.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <Eigen/Eigenvalues> 

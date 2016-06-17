@@ -7,7 +7,7 @@
 #include <libelas/elas.h>
 #include <frame_helper/CalibrationCv.h>
 #include "dense_stereo_types.h"
-#include <base/samples/distance_image.h>
+#include <base/samples/DistanceImage.hpp>
 
 namespace stereo {
 

@@ -4,10 +4,10 @@
 #include <stereo/config.h>
 #include <stereo/sparse_stereo_types.h>
 #include <frame_helper/CalibrationCv.h>
-#include <base/time.h>
-#include <base/eigen.h>
+#include <base/Time.hpp>
+#include <base/Eigen.hpp>
 #include <opencv2/opencv.hpp>
-#include <base/samples/distance_image.h>
+#include <base/samples/DistanceImage.hpp>
 
 #ifdef OPENCV_HAS_GPUMAT_IN_CORE
 #include <opencv2/core/gpumat.hpp>

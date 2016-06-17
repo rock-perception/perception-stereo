@@ -1,9 +1,9 @@
 #ifndef __SPARSE_STEREO_TYPES_HPP__
 #define __SPARSE_STEREO_TYPES_HPP__ 
 
-#include <base/eigen.h>
+#include <base/Eigen.hpp>
 #include <vector>
-#include <base/time.h>
+#include <base/Time.hpp>
 #include <envire/maps/Featurecloud.hpp>
 #include "store_vector.hpp"
 
