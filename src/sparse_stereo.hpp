@@ -6,7 +6,6 @@
 #include <frame_helper/CalibrationCv.h>
 #include <base/Time.hpp>
 #include <base/Eigen.hpp>
-#include <opencv2/opencv.hpp>
 #include <base/samples/DistanceImage.hpp>
 
 #ifdef OPENCV_HAS_GPUMAT_IN_CORE
@@ -77,11 +76,10 @@ public:
 
     /** calculate the relation between two stereo pairs
      */
-    void calculateInterFrameCorrespondences( const envire::Featurecloud* fc1, const envire::Featurecloud* fc2, int filterMethod );
     void calculateInterFrameCorrespondences( const StereoFeatureArray& frame1, const StereoFeatureArray& frame2, int filterMethod );
     void calculateInterFrameCorrespondences( 
-	    const cv::Mat& feat1, const std::vector<envire::KeyPoint>& keyp1, const std::vector<Eigen::Vector3d>& points1,
-	    const cv::Mat& feat2, const std::vector<envire::KeyPoint>& keyp2, const std::vector<Eigen::Vector3d>& points2, 
+	    const cv::Mat& feat1, const std::vector<cv::KeyPoint>& keyp1, const std::vector<Eigen::Vector3d>& points1,
+	    const cv::Mat& feat2, const std::vector<cv::KeyPoint>& keyp2, const std::vector<Eigen::Vector3d>& points2, 
 	    int filterMethod );
 
     /** Get the correspondences of the last interframe calculation 

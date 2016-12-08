@@ -2,7 +2,7 @@
 #include <Eigen/Core>
 #include <iostream>
 #include <opencv2/core/eigen.hpp>
-#include <envire/ransac.hpp>
+#include "ransac.hpp"
 #include "psurf.h"
 #include <thread>
 
@@ -52,10 +52,10 @@ void StereoFeatures::setConfiguration( const FeatureConfiguration &config )
     this->config = config;
     initDetector( config.targetNumFeatures );
 
-    if( config.descriptorType == envire::DESCRIPTOR_PSURF )
+    if( config.descriptorType == stereo::DESCRIPTOR_PSURF )
 	descriptorExtractor = new cv::PSurfDescriptorExtractor(4, 3, false);
 #ifdef OPENCV_HAS_SURF
-    else if( config.descriptorType == envire::DESCRIPTOR_SURF )
+    else if( config.descriptorType == stereo::DESCRIPTOR_SURF )
 	descriptorExtractor = new cv::SurfDescriptorExtractor(4, 3, false);
 #endif
     else
@@ -705,7 +705,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
     stereo_feature_pointer->clear();
 
     // currently we always use the surf descriptor (might change)
-    stereo_feature_pointer->descriptorType = envire::DESCRIPTOR_SURF;
+    stereo_feature_pointer->descriptorType = stereo::DESCRIPTOR_SURF;
 
     // get Q Projection Matrix as Eigen
     Eigen::Matrix4d Q;
@@ -731,7 +731,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
 
 	// TODO for the time being take only left keypoints. However, it might
 	// be better to take the keypoint with the strongest response
-	envire::KeyPoint kp;
+	cv::KeyPoint kp;
 	// calculate the keypointSize from the calibration matrix's fx parameter 
 	//  correct for unit and scale by distance (z.value)
 	const double keypointSize = leftMatches.keypoints[i].size 
@@ -739,7 +739,7 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
 	kp.size = keypointSize;
 	kp.angle = leftMatches.keypoints[i].angle;
 	kp.response = leftMatches.keypoints[i].response;
-	kp.point = cv2eigen( leftMatches.keypoints[i].pt );
+	kp.pt = leftMatches.keypoints[i].pt ;
 
 	stereo_feature_pointer->push_back( 
 		vh.head<3>(), kp, 
@@ -751,15 +751,6 @@ void StereoFeatures::calculateDepthInformationBetweenCorrespondences(StereoFeatu
     if(leftMatches.keypoints.size() > 0)
       stereo_feature_pointer->mean_z_value /= (double)(leftMatches.keypoints.size());
 std::cout << "****************************************** mean_z: " << stereo_feature_pointer->mean_z_value  / -100.0 << "m" << std::endl;
-}
-
-void StereoFeatures::calculateInterFrameCorrespondences( const envire::Featurecloud* fc1, const envire::Featurecloud* fc2, int filterMethod )
-{
-    // get features from array
-    const cv::Mat feat1 = cv::Mat( fc1->size(), fc1->descriptorSize, cv::DataType<float>::type, const_cast<float*>(&fc1->descriptors[0])); 
-    const cv::Mat feat2 = cv::Mat( fc2->size(), fc2->descriptorSize, cv::DataType<float>::type, const_cast<float*>(&fc2->descriptors[0])); 
-
-    calculateInterFrameCorrespondences( feat1, fc1->keypoints, fc1->vertices, feat2, fc2->keypoints, fc2->vertices, filterMethod );
 }
 
 void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArray& frame1, const StereoFeatureArray& frame2, int filterMethod )
@@ -779,8 +770,8 @@ void StereoFeatures::calculateInterFrameCorrespondences( const StereoFeatureArra
 }
 
 void StereoFeatures::calculateInterFrameCorrespondences( 
-	const cv::Mat& feat1, const std::vector<envire::KeyPoint>& keyp1, const std::vector<Eigen::Vector3d>& points1,
-	const cv::Mat& feat2, const std::vector<envire::KeyPoint>& keyp2, const std::vector<Eigen::Vector3d>& points2, 
+	const cv::Mat& feat1, const std::vector<cv::KeyPoint>& keyp1, const std::vector<Eigen::Vector3d>& points1,
+	const cv::Mat& feat2, const std::vector<cv::KeyPoint>& keyp2, const std::vector<Eigen::Vector3d>& points2, 
 	int filterMethod )
 {
     int numberOfGood = 0;
@@ -850,8 +841,8 @@ void StereoFeatures::calculateInterFrameCorrespondences(
 
 	    if( x.size() >= 3 )
 	    {
-		envire::ransac::FitTransformUncertain fit( x, p, e1, e2, DIST_THRESHOLD );
-		envire::ransac::ransacSingleModel( fit, 3, DIST_THRESHOLD, best_model, best_inliers, config.isometryFilterMaxSteps );
+		stereo::ransac::FitTransformUncertain fit( x, p, e1, e2, DIST_THRESHOLD );
+		stereo::ransac::ransacSingleModel( fit, 3, DIST_THRESHOLD, best_model, best_inliers, config.isometryFilterMaxSteps );
 
 		correspondenceTransform = best_model;
 	    }
@@ -871,11 +862,9 @@ void StereoFeatures::calculateInterFrameCorrespondences(
             vector<cv::Point2f> points1, points2;
             for(size_t i = 0; i < leftCorrespondences.size(); i++ )
             {
-		const base::Vector2d &v1( keyp1[ leftCorrespondences.at(i).queryIdx ].point );
-		points1.push_back( eigen2cv( v1 ) );
+		points1.push_back( keyp1[ leftCorrespondences.at(i).queryIdx ].pt);
 
-		const base::Vector2d &v2( keyp2[ leftCorrespondences.at(i).trainIdx ].point );
-		points2.push_back( eigen2cv( v2 ) );
+		points2.push_back( keyp2[ leftCorrespondences.at(i).trainIdx ].pt);
             }
 
             if(filterMethod == FILTER_HOMOGRAPHY)
@@ -991,8 +980,8 @@ cv::Mat StereoFeatures::getInterFrameDebugImage( const cv::Mat& debug1, const St
     for( size_t i = 0; i < corr->size(); i++ )
     {
 	cv::Point center1, center2;
-	center1 = eigen2cv( frame1.keypoints[ (*corr)[i].first ].point );
-	center2 = eigen2cv( frame2.keypoints[ (*corr)[i].second ].point );
+	center1 = frame1.keypoints[ (*corr)[i].first ].pt;
+	center2 = frame2.keypoints[ (*corr)[i].second ].pt;
 
 	center2.y += debugTopOffset;
 	cv::line( debugImage, center1, center2, color, width);

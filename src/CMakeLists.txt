@@ -50,9 +50,10 @@ set(CMAKE_CXX_FLAGS "-msse3")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
 
 rock_library(stereo
-    SOURCES densestereo.cpp homography.cpp dense_stereo_types.cpp configuration.cpp psurf.cpp sparse_stereo.cpp
-    DEPS_PKGCONFIG opencv frame_helper libelas envire
-    HEADERS densestereo.h dense_stereo_types.h sparse_stereo_types.h
+    SOURCES densestereo.cpp homography.cpp dense_stereo_types.cpp
+    configuration.cpp psurf.cpp sparse_stereo.cpp ransac.cpp
+    DEPS_PKGCONFIG opencv frame_helper libelas
+    HEADERS densestereo.h dense_stereo_types.h sparse_stereo_types.h ransac.cpp
     homography.h store_vector.hpp psurf.h sparse_stereo.hpp)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/stereo/config.h
