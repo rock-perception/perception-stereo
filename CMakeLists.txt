@@ -7,6 +7,8 @@ rock_init(stereo 0.1)
 rock_find_pkgconfig(base_TYPES REQUIRED "base-types")
 rock_export_includedir(${PROJECT_SOURCE_DIR}/src stereo)
 
+set(ROCK_TEST_ENABLED OFF)
+
 rock_standard_layout()
 
 
