@@ -169,10 +169,10 @@ void DenseStereo::getDistanceImages( cv::Mat &left_disp_image, cv::Mat &right_di
 
     // perform conversion to distance image
     disparityToDistance( left_disp_image,
-	    fabs( calib.camLeft.fx * calib.extrinsic.tx * 1e-3 ) );
+	    fabs( calib.camLeft.fx * calib.extrinsic.tx ) );
     
     disparityToDistance( right_disp_image,
-	    fabs( calib.camRight.fx * calib.extrinsic.tx * 1e-3 ) );
+	    fabs( calib.camRight.fx * calib.extrinsic.tx ) );
 }
 
 void DenseStereo::getDistanceImages( const cv::Mat &left_frame, const cv::Mat &right_frame,

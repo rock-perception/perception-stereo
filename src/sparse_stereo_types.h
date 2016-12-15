@@ -4,7 +4,7 @@
 #include <base/Eigen.hpp>
 #include <vector>
 #include <base/Time.hpp>
-#include <envire/maps/Featurecloud.hpp>
+#include <opencv2/opencv.hpp>
 #include "store_vector.hpp"
 
 namespace stereo
@@ -31,14 +31,21 @@ enum FILTER
     FILTER_ISOMETRY,
 };
 
+enum DESCRIPTOR
+{
+    DESCRIPTOR_SURF = 1,
+    DESCRIPTOR_PSURF = 2,
+};
+
+
 struct DetectorConfiguration
 {
     DetectorConfiguration()
-	: SURFparam(170),
-	goodParam(0.1),
-	mserParam(3),
-	starParam(9),
-	fastParam(12)
+    : SURFparam(170),
+    goodParam(0.1),
+    mserParam(3),
+    starParam(9),
+    fastParam(12)
     {}
 
     int SURFparam;
@@ -51,17 +58,17 @@ struct DetectorConfiguration
 struct FeatureConfiguration
 {
     FeatureConfiguration() 
-	: debugImage( true ),
-	  targetNumFeatures( 100 ),
-	  maxStereoYDeviation( 5 ),
-	  knn( 1 ),
-	  distanceFactor( 2.0 ),
-	  isometryFilterMaxSteps( 1000 ),
-	  isometryFilterThreshold( 0.1 ),
-	  adaptiveDetectorParam( false ),
-	  descriptorType( envire::DESCRIPTOR_SURF ),
-	  detectorType( DETECTOR_SURF ),
-	  filterType( FILTER_STEREO )
+    : debugImage( true ),
+      targetNumFeatures( 100 ),
+      maxStereoYDeviation( 5 ),
+      knn( 1 ),
+      distanceFactor( 2.0 ),
+      isometryFilterMaxSteps( 1000 ),
+      isometryFilterThreshold( 0.1 ),
+      adaptiveDetectorParam( false ),
+      descriptorType( DESCRIPTOR_SURF ),
+      detectorType( DETECTOR_SURF ),
+      filterType( FILTER_STEREO )
     {}
 
     /** if set to true, the library will generate debug images during the
@@ -105,7 +112,7 @@ struct FeatureConfiguration
     bool adaptiveDetectorParam;
     DetectorConfiguration detectorConfig;
 
-    envire::DESCRIPTOR descriptorType;
+    DESCRIPTOR descriptorType;
     DETECTOR detectorType;
     FILTER filterType;
 };
@@ -119,10 +126,10 @@ public:
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Eigen::DontAlign> Descriptor;
 
     int descriptorSize;
-    envire::DESCRIPTOR descriptorType;
+    DESCRIPTOR descriptorType;
 
     std::vector<base::Vector3d> points;
-    std::vector<envire::KeyPoint> keypoints;
+    std::vector<cv::KeyPoint> keypoints;
     std::vector<Scalar> descriptors;
     std::vector<int> source_frame;
 
@@ -130,7 +137,7 @@ public:
 
     StereoFeatureArray() : descriptorSize(0) {}
 
-    void push_back( const base::Vector3d& point, const envire::KeyPoint& keypoint, const Descriptor& descriptor, int _source_frame = -1 ) 
+    void push_back( const base::Vector3d& point, const cv::KeyPoint& keypoint, const Descriptor& descriptor, int _source_frame = -1 ) 
     {
 	points.push_back( point );
 	keypoints.push_back( keypoint );
@@ -169,42 +176,6 @@ public:
 	descriptors.clear(); 
 	keypoints.clear(); 
         source_frame.clear();
-    }
-
-    void copyTo( envire::Featurecloud& fc ) const
-    {
-	fc.clear();
-
-	std::copy( points.begin(), points.end(), std::back_inserter( fc.vertices ) );
-	fc.keypoints = keypoints;
-	fc.descriptors = descriptors;
-	fc.descriptorType = descriptorType;
-	fc.descriptorSize = descriptorSize;
-    }
-
-    /** 
-     * copy to a featurecloud, but only up to a maximum distance
-     *
-     * @param fc target feature cloud
-     * @param max_dist any features further away from the origin than this will be ignored
-     * @param transform is going to be aplied to the points before copying
-     */
-    void copyTo( envire::Featurecloud& fc, double max_dist, const Eigen::Affine3d& transform = Eigen::Affine3d::Identity() ) const
-    {
-	fc.clear();
-	fc.descriptorType = descriptorType;
-	fc.descriptorSize = descriptorSize;
-
-	for( size_t i=0; i<points.size(); i++ )
-	{
-	    if( points[i].norm() < max_dist )
-	    {
-		fc.vertices.push_back( transform * points[i] );
-		fc.keypoints.push_back( keypoints[i] );
-		std::vector<float>::const_iterator d = descriptors.begin() + descriptorSize * i;
-		std::copy( d, d + descriptorSize, std::back_inserter( fc.descriptors ) );
-	    }
-	}
     }
 
    void copyTo(StereoFeatureArray &target)
@@ -269,7 +240,7 @@ public:
      int temp;
      is >> temp;
      is.ignore(10, '\n');
-     descriptorType = (envire::DESCRIPTOR)temp;
+     descriptorType = (DESCRIPTOR)temp;
      size_t size = 0;
      is >> size;
      is.ignore(10, '\n');

@@ -12,6 +12,5 @@
     <depend package="opencv" />
     <depend package="base/types" />
     <depend package="image_processing/frame_helper" />
-    <depend package="slam/envire" />
     <tags>stable</tags>
 </package>
